@@ -1,0 +1,37 @@
+# Claude Code local state
+.claude/
+
+# Nix
+result
+result-*
+.direnv/
+
+# OS — macOS
+.DS_Store
+.AppleDouble
+._*
+.Spotlight-V100
+.Trashes
+
+# OS — Linux
+.directory
+.Trash-*
+.nfs*
+
+# Editor — Emacs
+*~
+\#*\#
+.\#*
+*.elc
+auto-save-list/
+.emacs.desktop
+.emacs.desktop.lock
+
+# Editor — VSCodium / VS Code
+.vscode/
+*.code-workspace
+
+# Zig
+.zig-cache/
+zig-cache/
+zig-out/

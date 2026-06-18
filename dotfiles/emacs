@@ -1,0 +1,380 @@
+;; -*- mode: emacs-lisp; lexical-binding: t -*-
+
+;; ~/.emacs is a read-only symlink under Nix; keep Customize out of it.
+(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+(when (file-exists-p custom-file) (load custom-file))
+
+;;; Packages:
+;;; - Package management (use-package)
+;;; - Programming modes (Python, Julia, Rust, Zig, YAML, ...)
+;;; - LSP via eglot (built-in) with Flymake diagnostics
+;;; - FIM code completion (minuet, codestral)
+;;; - UI improvements and themes (doom-one)
+;;;
+;;; Requirements:
+;;; - Emacs 30+ (for eglot and treesitter modes)
+;;; - zsh (hardcoded as shell)
+;;; - pylsp (uv tool install python-lsp-server)
+;;; - clangd (via clang-tools or clang package)
+;;; - rust-analyzer
+;;; - LanguageServer.jl (Pkg.add("LanguageServer") in Julia)
+;;; - zls
+;;; - CODESTRAL_API_KEY env var (for minuet FIM completions)
+
+;; Load shell-style secrets into Emacs's process environment
+(let ((secrets (expand-file-name "~/.secrets")))
+  (when (file-readable-p secrets)
+    (with-temp-buffer
+      (insert-file-contents secrets)
+      (goto-char (point-min))
+      (while (re-search-forward
+              "^\\(?:export[ \t]+\\)?\\([A-Za-z_][A-Za-z0-9_]*\\)=\\(.*\\)$"
+              nil t)
+        (let ((key (match-string 1))
+              (val (string-trim (match-string 2) "[\"']" "[\"']")))
+          (setenv key val))))))
+
+;; Packages are provided by Nix (programs.emacs.extraPackages in
+;; home/common.nix), so they're already on the load-path — no package.el /
+;; MELPA, and use-package forms below carry no :ensure/:vc.
+;; package.el still auto-initializes, so M-x package-install remains available
+;; for ad-hoc use after a manual package-refresh-contents.
+(require 'use-package)
+(setq use-package-always-ensure nil)
+
+;; Check .envrc / direnv in each buffer so Nix devshell env reaches Emacs
+;; (rustfmt, rust-analyzer, etc. resolve from the project's flake)
+(use-package envrc
+  :diminish envrc-mode
+  :hook (after-init . envrc-global-mode))
+
+;; Stay in sync with changes made by other programs
+(global-auto-revert-mode 1)
+(setq global-auto-revert-non-file-buffers t)
+(setq auto-revert-verbose nil)
+
+;; UI tweaks
+(menu-bar-mode -1)
+(tool-bar-mode -1)
+(setq inhibit-startup-message t)
+(setq make-backup-files nil)
+(setq auto-save-default nil)
+(setq ring-bell-function 'ignore)
+(global-display-line-numbers-mode 1)
+(setq tab-width 4)
+(setq indent-tabs-mode nil)
+(electric-pair-mode 1)
+(with-eval-after-load 'diminish (diminish 'electric-pair-mode))
+(setq-default fill-column 96)
+(add-hook 'prog-mode-hook 'display-fill-column-indicator-mode)
+(add-hook 'python-base-mode-hook (lambda () (setq-local fill-column 88)))
+
+;; diminish minor modes from the mode line
+(use-package diminish)
+
+;; projects
+(use-package projectile
+  :diminish projectile-mode
+  :config
+  (projectile-mode +1)
+  (setq projectile-project-search-path '("~/jsqr"))
+  (setq projectile-switch-project-action 'projectile-dired))
+
+(define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+
+;; like dired, with previews and a nicer UI
+(use-package dirvish
+  :init
+  (dirvish-override-dired-mode)
+  :custom
+  (dirvish-attributes '(file-size vc-state subtree-state))
+  (dirvish-mode-line-format
+   '(:left (sort symlink) :right (omit yank index)))
+  :bind
+  (("C-c d" . dirvish)
+   :map dirvish-mode-map
+   ("a"   . dirvish-quick-access)
+   ("f"   . dirvish-file-info-menu)
+   ("y"   . dirvish-yank-menu)
+   ("N"   . dirvish-narrow)
+   ("h"   . dirvish-history-jump)
+   ("TAB" . dirvish-subtree-toggle)
+   ("M-f" . dirvish-history-go-forward)
+   ("M-b" . dirvish-history-go-backward)
+   ("M-l" . dirvish-ls-switches-menu)
+   ("M-m" . dirvish-mark-menu)
+   ("M-t" . dirvish-layout-toggle)
+   ("M-s" . dirvish-setup-menu)
+   ("M-e" . dirvish-emerge-menu)
+   ("M-j" . dirvish-fd-jump)))
+
+;; Inherit PATH (and friends) from a login shell so the launchd-spawned
+;; daemon can find tools from ~/.nix-profile/bin (zls, rust-analyzer, ...).
+(use-package exec-path-from-shell
+  :config
+  (exec-path-from-shell-initialize))
+
+;; Prefer tree-sitter major modes; grammars are provisioned via Nix into
+;; ~/.emacs.d/tree-sitter (see home/common.nix). The *-ts-mode each map from
+;; the classic mode that auto-mode-alist resolves to. Zig is handled by
+;; replacing zig-mode with zig-ts-mode outright.
+(dolist (m '((python-mode . python-ts-mode)
+             (c-mode      . c-ts-mode)
+             (rust-mode   . rust-ts-mode)
+             (julia-mode  . julia-ts-mode)))
+  (add-to-list 'major-mode-remap-alist m))
+
+;; LSP (built-in eglot)
+;; Both classic and -ts variants are listed: rust-ts-mode/c-ts-mode/zig-ts-mode
+;; do not derive from their classic modes, so their hooks need explicit entries
+;; (julia-ts-mode does derive from julia-mode, listed for symmetry).
+(use-package eglot
+  :hook (((python-mode python-ts-mode) . eglot-ensure)
+         ((julia-mode julia-ts-mode) . eglot-ensure)
+         ((rust-mode rust-ts-mode) . eglot-ensure)
+         ((zig-mode zig-ts-mode) . eglot-ensure)
+         ((c-mode c-ts-mode) . eglot-ensure)
+	 (typst-ts-mode . eglot-ensure))
+  :config
+  (setq eglot-autoshutdown t)
+  (add-to-list 'eglot-server-programs
+	       '((python-mode python-ts-mode) . ("pyrefly" "lsp"))))
+
+;; Julia
+;; major-mode-remap-alist (above) routes buffers to julia-ts-mode, which derives
+;; from julia-mode, so julia-mode-map and TAB stay here
+(use-package julia-mode
+  :bind (:map julia-mode-map
+	     ("TAB" . julia-latexsub-or-indent)))
+
+(use-package julia-ts-mode)
+
+;; Julia LSP (LanguageServer.jl) via eglot.
+;; Registers the julia entry in eglot-server-programs; without it the
+;; (julia-mode . eglot-ensure) hook above eglot with no server program.
+(use-package eglot-jl
+  :init
+  (with-eval-after-load 'eglot
+    (require 'eglot-jl)
+    (eglot-jl-init))
+  :config
+  ;; LanguageServer.jl's first precompile can take longer than default
+  ;; 30s connect timeout
+  (setq eglot-connect-timeout 120))
+
+;; Rust
+;; rust-mode provides the .rs association; remap routes buffers to the built-in
+;; rust-ts-mode, which does NOT derive from rust-mode, so the hook stays on
+;; rust-ts-mode-hook. rust-format-on-save is a rust-mode var with no equivalent
+;; in rust-ts-mode; format on save via eglot/rust-analyzer (rustfmt) instead.
+(use-package rust-mode
+  :config
+  (add-hook 'rust-ts-mode-hook
+            (lambda ()
+              (add-hook 'before-save-hook #'eglot-format-buffer nil t)
+              ;; Workaround: Ghostty terminal miscounts columns on
+              ;; rust's composed operator glyphs, duplicating lines
+              ;; during navigation. Remove once Ghostty fixes it.
+              (when (let ((tty (frame-parameter nil 'tty-type)))
+                      (and tty (string-match-p "ghostty" tty)))
+                (auto-composition-mode -1)))))
+
+;; Zig
+;; Classic zig-mode is archived (EOL); zig-ts-mode is the successor.
+;; Grammar comes from Nix (~/.emacs.d/tree-sitter). eglot's built-in server list
+;; covers zig-ts-mode -> zls
+(use-package zig-ts-mode
+  :mode "\\.zig\\'")
+
+;; C
+;; Remap routes .c/.h to c-ts-mode (derives from prog-mode, not c-mode), which
+;; uses its own style/offset vars rather than c-set-style / c-basic-offset.
+(setq c-ts-mode-indent-style 'k&r)
+(add-hook 'c-ts-mode-hook
+          (lambda ()
+            (setq c-ts-mode-indent-offset 4)
+            (setq indent-tabs-mode nil)))
+
+;; YAML/TOML
+(use-package yaml-mode)
+(use-package toml-mode)
+
+;; Spell checking
+(setq ispell-program-name "aspell")
+
+;; Markdown
+(use-package markdown-mode
+  :config
+  (add-hook 'markdown-mode-hook 'flyspell-mode)
+  (add-hook 'markdown-mode-hook 'visual-line-mode)
+  (with-eval-after-load 'diminish
+    (diminish 'visual-line-mode)
+    (diminish 'flyspell-mode)))
+
+;; Nix
+(use-package nix-mode
+  :mode "\\.nix\\'")
+
+;; TeX / LaTeX
+(use-package tex
+  :mode (("\\.tex\\'" . latex-mode))
+  :config
+  (setq TeX-auto-save t)
+  (setq TeX-PDF-mode t))
+
+;; Typst
+(use-package typst-ts-mode
+  :custom
+  (typst-ts-watch-options "--open")
+  (typst-ts-mode-grammar-location (expand-file-name "tree-sitter/libtree-sitter-typst.so" user-emacs-directory))
+  (typst-ts-mode-enable-raw-blocks-highlight t)
+  :config
+  (keymap-set typst-ts-mode-map "C-c C-c" #'typst-ts-tmenu)
+  (with-eval-after-load 'eglot
+    (add-to-list 'eglot-server-programs
+		 '((typst-ts-mode) . ("tinymist")))))
+;; Grammar (libtree-sitter-typst.so) is provisioned via Nix into
+;; ~/.emacs.d/tree-sitter; no manual install step needed.
+
+;; Org Mode
+(use-package org
+  :config
+  (setq org-startup-indented t)
+  ; (setq org-src-tab-act-as-tab t)
+  (setq org-src-fontify-natively t)
+  (setq org-src-preserve-indentation t)
+  (setq org-edit-src-content-indentation 0)
+  (setq org-src-window-setup 'current-window))
+
+;; zsh
+(setq explicit-shell-file-name "/bin/zsh")
+(setq shell-file-name "/bin/zsh")
+
+;; eat (Emulate A Terminal)
+(use-package eat
+  :bind (("C-c t" . eat))
+  :hook ((eshell-load . eat-eshell-mode)
+         (eshell-load . eat-eshell-visual-command-mode))
+  :custom
+  ;; Skip eat's custom terminfo (eat-256color) which isn't installed
+  ;; system-wide
+  (eat-term-name "xterm-256color"))
+
+;; ghostel - new terminal based on ghostty lib; build messed up by zig 16.0
+;; changes, so I'm just going to wait on this one rather than dive in
+;; (use-package ghostel
+;;   :ensure t)
+
+;; Ruff: Python formatting and linting
+(use-package ruff-format
+  :diminish ruff-format-on-save-mode
+  :config
+  ;; python-base-mode-hook so it fires for both python-mode and python-ts-mode.
+  (add-hook 'python-base-mode-hook 'ruff-format-on-save-mode))
+
+;; Git
+(use-package magit)
+
+;; Which-key for discoverability
+(use-package which-key
+  :diminish which-key-mode
+  :config (which-key-mode))
+
+;; Vertical minibuffer completion
+(use-package vertico
+  :diminish vertico-mode
+  :config (vertico-mode))
+
+;; Flexible/fuzzy matching for completions
+(use-package orderless
+  :config
+  (setq completion-styles '(orderless basic)))
+
+;; Route in-buffer completeion through minibuffer
+(setq completion-in-region-function
+      (lambda (&rest args)
+	(apply (if vertico-mode
+		   #'consult-completion-in-region
+		 #'completion-in-region)
+	       args)))
+
+;; Enhanced completion commands
+(use-package consult)
+
+;; Keybindings
+(global-set-key (kbd "C-c f") 'find-file)
+(global-set-key (kbd "C-c b") 'consult-buffer)
+(global-set-key (kbd "C-c l") 'consult-line)
+(global-set-key (kbd "C-c g") 'consult-ripgrep)
+(global-set-key (kbd "C-c s") 'save-buffer)
+(global-set-key (kbd "C-c q") 'kill-buffer)
+
+;; In-buffer annotations BUG some kind of version issue causing trouble
+;; (use-package marginalia
+;;   :ensure t
+;;   :config (marginalia-mode))
+
+(defun jj/set-gui-font (&optional frame)
+  (when (and (display-graphic-p frame)
+             (member "FiraCode Nerd Font Mono" (font-family-list frame)))
+    (set-face-attribute 'default frame
+                        :family "FiraCode Nerd Font Mono" :height 130)
+    ;; Changing the font preserves pixel size, which would otherwise shift
+    ;; the column/row count; re-assert the 120x48 grid in the new font.
+    (set-frame-size frame 110 50)))
+;; Apply to the current frame (standalone Emacs.app) and to every new
+;; frame the daemon creates for emacsclient -c.
+(jj/set-gui-font)
+(add-hook 'after-make-frame-functions #'jj/set-gui-font)
+
+;; Used at GUI frame creation; jj/set-gui-font re-asserts it after the
+;; font swap (above). Covers the initial frame and emacsclient -c.
+(add-to-list 'default-frame-alist '(width . 110))
+(add-to-list 'default-frame-alist '(height . 50))
+
+;; Theme
+(use-package doom-themes
+  :custom
+  ;; Global settings (defaults)
+  (doom-themes-enable-bold t)   ; if nil, bold is universally disabled
+  (doom-themes-enable-italic t) ; if nil, italics is universally disabled
+  :config
+  ;; (load-theme 'doom-monokai-pro t)
+  (setq doom-gruvbox-dark-variant "hard")  ; darker bg (#1d2021)
+  (load-theme 'doom-gruvbox t)
+
+  ;; Brighter comments!
+  ;; (custom-theme-set-faces
+  ;;  'doom-monokai-pro
+  ;;  '(font-lock-comment-face ((t (:foreground "#a5a29a"))))
+  ;;  '(font-lock-comment-delimeter-face ((t (:foreground "#a5a29a")))))
+  (custom-theme-set-faces
+   'doom-gruvbox
+   '(font-lock-comment-face ((t (:foreground "#a89984"))))
+   '(font-lock-comment-delimeter-face ((t (:foreground "#a89984")))))
+
+  ;; Enable flashing mode-line on errors
+  (doom-themes-visual-bell-config)
+  ;; Corrects org-mode's native fontification.
+  (doom-themes-org-config))
+
+;; Make inlay hints in zig & rust easier to see
+(with-eval-after-load 'eglot
+  (set-face-attribute 'eglot-inlay-hint-face nil
+		      :foreground "#727072"))
+
+;; FIM code completion
+(use-package minuet
+  :bind
+  (("M-y" . #'minuet-complete-with-minibuffer)
+   ("M-i" . #'minuet-show-suggestion)
+   ("C-c m" . #'minuet-configure-provider))
+  :config
+  (setq minuet-provider 'codestral)
+  (minuet-set-optional-options minuet-codestral-options :max_tokens 256)
+  (define-key minuet-active-mode-map (kbd "M-p") #'minuet-previous-suggestion)
+  (define-key minuet-active-mode-map (kbd "M-n") #'minuet-next-suggestion)
+  (define-key minuet-active-mode-map (kbd "M-A") #'minuet-accept-suggestion)
+  (define-key minuet-active-mode-map (kbd "M-a") #'minuet-accept-suggestion-line)
+  (define-key minuet-active-mode-map (kbd "M-e") #'minuet-dismiss-suggestion))
+
