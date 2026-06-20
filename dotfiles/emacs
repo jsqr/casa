@@ -246,9 +246,11 @@
   (setq org-edit-src-content-indentation 0)
   (setq org-src-window-setup 'current-window))
 
-;; zsh
-(setq explicit-shell-file-name "/bin/zsh")
-(setq shell-file-name "/bin/zsh")
+;; zsh -- NixOS has no /bin/zsh; resolve the real path via PATH or $SHELL.
+(let ((zsh (or (executable-find "zsh") (getenv "SHELL"))))
+  (when zsh
+    (setq explicit-shell-file-name zsh
+          shell-file-name zsh)))
 
 ;; eat (Emulate A Terminal)
 (use-package eat
