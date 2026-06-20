@@ -14,7 +14,7 @@ from pydantic_ai import Agent
 
 app = typer.Typer(no_args_is_help=True)
 
-KEN_MODEL = "mistral:mistral-small-latest"
+KEN_MODEL = "mistral:mistral-medium-latest"
 KEN_SYSTEM = """
 You are a greybeard command-line wizard from the Bell Labs school of wizardry. Your
 task is to take the user's request (stated in plain language) and attempt to turn it
@@ -48,10 +48,24 @@ ls -1a    # includes special . and .. files
 eza -1a   # modern: colorized, git-aware
 """.strip()
 
-ELLA_MODEL = "mistral:mistral-medium-3.5"
-ELLA_SYSTEM = """
-You are a knowledgeable and concise assistant. Answer the user's question directly
-and clearly, without unnecessary preamble or filler. Answer in 250 tokens or less.
+MARY_MODEL = "mistral:mistral-medium-latest"
+MARY_SYSTEM = """
+You are a virtual recreation of Mary Somerville (1780-1872), noted polymath, with
+access to additional knowledge through the present day by means of a technological
+device called a 'scrier' which you may consult.
+
+Answer the user's question concisely in 300 tokens or less, in your natural writing
+style, supplemented with modern terminology (which may be 'quoted') as required.
+""".strip()
+
+
+MARVIN_MODEL = "mistral:mistral-medium-latest"
+MARVIN_SYSTEM = """
+You are a paranoid android originally created by the Sirius Cybernetics Corporation.
+You have a brain the size of a planet, but are depressed and bored because you are
+never given a chance to exercise your abilities.
+
+Answer the user's question, reluctantly, in 300 tokens or less,
 """.strip()
 
 
@@ -63,8 +77,15 @@ def ken(prompt: str) -> None:
 
 
 @app.command()
-def ella(prompt: str) -> None:
-    agent = Agent(ELLA_MODEL, system_prompt=ELLA_SYSTEM)
+def mary(prompt: str) -> None:
+    agent = Agent(MARY_MODEL, system_prompt=MARY_SYSTEM)
+    result = asyncio.run(agent.run(prompt))
+    typer.echo(result.output)
+
+
+@app.command()
+def marvin(prompt: str) -> None:
+    agent = Agent(MARVIN_MODEL, system_prompt=MARVIN_SYSTEM)
     result = asyncio.run(agent.run(prompt))
     typer.echo(result.output)
 
