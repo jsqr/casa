@@ -15,6 +15,7 @@ with pkgs; [
   dust
   dvc
   fd
+  fortune
   fx
   git-extras
   glow

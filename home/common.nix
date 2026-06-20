@@ -153,6 +153,9 @@ in
       # M-x shell / TRAMP where the escape sequences would be garbage.
       if [[ -o interactive && -t 1 && $TERM != dumb ]]; then
         fastfetch
+        echo
+        fortune
+        echo
       fi
     '';
   };
