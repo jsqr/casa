@@ -14,7 +14,6 @@
 ;;; Requirements:
 ;;; - Emacs 30+ (for eglot and treesitter modes)
 ;;; - zsh (hardcoded as shell)
-;;; - pylsp (uv tool install python-lsp-server)
 ;;; - clangd (via clang-tools or clang package)
 ;;; - rust-analyzer
 ;;; - LanguageServer.jl (Pkg.add("LanguageServer") in Julia)
