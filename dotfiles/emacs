@@ -345,10 +345,6 @@
   (load-theme 'doom-gruvbox t)
 
   ;; Brighter comments!
-  ;; (custom-theme-set-faces
-  ;;  'doom-monokai-pro
-  ;;  '(font-lock-comment-face ((t (:foreground "#a5a29a"))))
-  ;;  '(font-lock-comment-delimeter-face ((t (:foreground "#a5a29a")))))
   (custom-theme-set-faces
    'doom-gruvbox
    '(font-lock-comment-face ((t (:foreground "#a89984"))))
