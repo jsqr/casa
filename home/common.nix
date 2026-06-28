@@ -64,7 +64,7 @@ in
   programs.bat = {
     enable = true;
     config = {
-      theme = "Monokai Extended";
+      theme = "gruvbox-dark";
     };
   };
 
@@ -105,7 +105,7 @@ in
       orderless
       consult
       minuet
-      doom-themes
+      gruvbox-theme
     ];
   };
   services.emacs.enable = true;
@@ -167,7 +167,7 @@ in
       navigate = true;
       line-numbers = true;
       side-by-side = true;
-      syntax-theme = "Monokai Extended";
+      syntax-theme = "gruvbox-dark";
     };
   };
 
@@ -201,6 +201,7 @@ in
 
   home.file.".gitignore".source = ../dotfiles/gitignore;
   home.file.".emacs".source = ../dotfiles/emacs;
+  home.file.".julia/config/startup.jl".source = ../dotfiles/julia/startup.jl;
   home.file.".emacs.d/tree-sitter".source = "${emacsTreesitGrammars}/lib";
 
   # Launch terminal Emacs with TERM=tmux-direct so doom-gruvbox renders in real
