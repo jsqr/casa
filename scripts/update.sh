@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # ~/bin/update — interactive update helper (thalia only).
-# melpomene upgrades itself nightly via system.autoUpgrade; see
-# hosts/melpomene/configuration.nix.
+# melpomene upgrades itself nightly: Nix via system.autoUpgrade (see
+# hosts/melpomene/configuration.nix), and the imperative rustup/uv toolchains
+# via a systemd user timer (see the toolchain-update unit in home/melpomene.nix).
+# This script is thalia's hand-run equivalent of both.
 set -u
 
 HOST="$(hostname -s)"
