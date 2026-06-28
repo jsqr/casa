@@ -334,15 +334,9 @@
 (add-to-list 'default-frame-alist '(height . 50))
 
 ;; Theme
-(use-package gruvbox-theme
+(use-package kanagawa-themes
   :config
-  (load-theme 'gruvbox-dark-hard t)  ; hard contrast, bg #1d2021
-
-  ;; Brighter comments!
-  (custom-theme-set-faces
-   'gruvbox-dark-hard
-   '(font-lock-comment-face ((t (:foreground "#a89984"))))
-   '(font-lock-comment-delimeter-face ((t (:foreground "#a89984")))))
+  (load-theme 'kanagawa-dragon t)
 
   ;; Flash the frame instead of an audible bell.
   (setq visible-bell t)

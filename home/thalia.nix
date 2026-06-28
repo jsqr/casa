@@ -18,7 +18,8 @@ in
     package = null;
     settings = {
       # theme = "Monokai Pro";
-      theme = "Gruvbox Dark Hard";  # hard = darker bg (#1d2021)
+      # theme = "Gruvbox Dark Hard";  # hard = darker bg (#1d2021)
+      theme = "Kanagawa Dragon";
       font-family = "FiraCode Nerd Font Mono";
       keybind = "shift+enter=text:\\x1b\\r";
       shell-integration-features = "ssh-env,ssh-terminfo";

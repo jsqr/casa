@@ -64,7 +64,13 @@ in
   programs.bat = {
     enable = true;
     config = {
-      theme = "gruvbox-dark";
+      theme = "Kanagawa Dragon";
+    };
+    # Kanagawa Dragon isn't a bat built-in; ship the tmTheme and let
+    # home-manager rebuild the cache. delta reads the same theme DB.
+    themes."Kanagawa Dragon" = {
+      src = ../dotfiles/bat;
+      file = "Kanagawa Dragon.tmTheme";
     };
   };
 
@@ -106,6 +112,7 @@ in
       consult
       minuet
       gruvbox-theme
+      kanagawa-themes
     ];
   };
   services.emacs.enable = true;
@@ -167,7 +174,7 @@ in
       navigate = true;
       line-numbers = true;
       side-by-side = true;
-      syntax-theme = "gruvbox-dark";
+      syntax-theme = "Kanagawa Dragon";
     };
   };
 
@@ -262,7 +269,8 @@ in
       set -g set-clipboard on
 
       set -g pane-border-style "fg=colour238"
-      set -g pane-active-border-style "fg=colour166,bold"
+      # highlight accent: #c4746e (Kanagawa dragonRed); was colour166 (gruvbox orange)
+      set -g pane-active-border-style "fg=#c4746e,bold"
       set -g pane-border-indicators arrows
 
       bind | split-window -h -c "#{pane_current_path}"
@@ -270,10 +278,10 @@ in
       bind c new-window -c "#{pane_current_path}"
 
       set -g status-style "bg=colour235,fg=colour248"
-      set -g status-left "#[fg=colour166,bold] #S "
+      set -g status-left "#[fg=#c4746e,bold] #S "
       set -g status-right "#[fg=colour248] %Y-%m-%d %H:%M "
       set -g status-left-length 20
-      setw -g window-status-current-style "fg=colour166,bold"
+      setw -g window-status-current-style "fg=#c4746e,bold"
       setw -g window-status-current-format " #I:#W "
       setw -g window-status-format " #I:#W "
     '';
