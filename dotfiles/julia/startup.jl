@@ -42,4 +42,43 @@ if isinteractive()
     catch
         @warn "startup.jl: BenchmarkTools not installed — skipping"
     end
+
+    # Debugger.jl colors its source listing via Highlights.jl (not OhMyREPL),
+    # defaulting to a bright Monokai theme. Re-theme to Kanagawa Dragon when
+    # Debugger loads — it's pulled in per-project, not at startup.
+    push!(Base.package_callbacks, function (pkg)
+        pkg.name == "Debugger" || return
+        try
+            # Split eval: the `using` must run before the @theme/S"" macros below
+            # are expanded, so they can't share one block.
+            @eval using Debugger, Debugger.Highlights.Themes, Debugger.Highlights.Tokens
+            @eval begin
+                abstract type KanagawaDragonTheme <: AbstractTheme end
+                @theme KanagawaDragonTheme Dict(
+                    :name   => "KanagawaDragon",
+                    :style  => S"",
+                    :tokens => Dict(
+                        COMMENT           => S"fg: 737c73",  # dragonAsh
+                        KEYWORD           => S"fg: 8992a7",  # dragonViolet
+                        KEYWORD_NAMESPACE => S"fg: c4746e",  # dragonRed
+                        KEYWORD_TYPE      => S"fg: 8ea4a2",  # dragonAqua
+                        OPERATOR          => S"fg: c4746e",  # dragonRed
+                        NAME_FUNCTION     => S"fg: 8ba4b0",  # dragonBlue2
+                        NAME_CLASS        => S"fg: 8ba4b0",
+                        NAME_DECORATOR    => S"fg: c4746e",
+                        NAME_CONSTANT     => S"fg: b6927b",  # dragonOrange
+                        NUMBER            => S"fg: a292a3",  # dragonPink
+                        LITERAL           => S"fg: a292a3",
+                        STRING            => S"fg: 8a9a7b",  # dragonGreen2
+                        STRING_ESCAPE     => S"fg: a292a3",
+                        ERROR             => S"fg: c4746e",
+                    )
+                )
+                Debugger.set_theme(KanagawaDragonTheme)
+                Debugger.set_highlight(Debugger.HIGHLIGHT_24_BIT)
+            end
+        catch e
+            @warn "startup.jl: failed to theme Debugger" exception = e
+        end
+    end)
 end
