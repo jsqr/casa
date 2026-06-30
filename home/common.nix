@@ -89,6 +89,8 @@ in
     # are not listed. Tree-sitter grammars are provided separately, above.
     extraPackages = epkgs: with epkgs; [
       envrc
+      denote
+      org-appear
       diminish
       projectile
       dirvish
@@ -134,7 +136,8 @@ in
 
     shellAliases = {
       # `e` is provided by the ~/bin/e wrapper (TERM=tmux-direct for truecolor).
-      egui = "emacsclient -c";
+      # -a "" auto-starts a daemon if none is running (matches the `e` wrapper).
+      egui = "emacsclient -c -a \"\"";
     };
 
     envExtra = ''

@@ -64,7 +64,7 @@
 (setq indent-tabs-mode nil)
 (electric-pair-mode 1)
 (with-eval-after-load 'diminish (diminish 'electric-pair-mode))
-(setq-default fill-column 96)
+(setq-default fill-column 92)
 (add-hook 'prog-mode-hook 'display-fill-column-indicator-mode)
 (add-hook 'python-base-mode-hook (lambda () (setq-local fill-column 88)))
 
@@ -83,7 +83,10 @@
 
 ;; like dired, with previews and a nicer UI
 (use-package dirvish
-  :init
+  ;; demand + :config so dirvish loads before override runs (the autoload
+  ;; isn't active under our Nix load-path-only setup, so :init was void)
+  :demand t
+  :config
   (dirvish-override-dired-mode)
   :custom
   (dirvish-attributes '(file-size vc-state subtree-state))
@@ -243,7 +246,36 @@
   (setq org-src-fontify-natively t)
   (setq org-src-preserve-indentation t)
   (setq org-edit-src-content-indentation 0)
-  (setq org-src-window-setup 'current-window))
+  (setq org-src-window-setup 'current-window)
+  ;; Show inline images on open; refresh with C-c C-x C-v.
+  (setq org-startup-with-inline-images t)
+  (setq org-image-actual-width '(600)))
+
+;; Reveal full [[url][desc]] markup when point is inside a link.
+(use-package org-appear
+  :hook (org-mode . org-appear-mode)
+  :config
+  (setq org-appear-autolinks t))
+
+;; Denote
+(use-package denote
+  :ensure t
+  :hook (dired-mode . denote-dired-mode)
+  :bind
+  (("C-c n n" . denote)
+   ("C-c n r" . denote-rename-file)
+   ("C-c n l" . denote-link)
+   ("C-c n b" . denote-backlinks)
+   ("C-c n d" . denote-dired)
+   ("C-c n g" . denote-grep))
+  :config
+  (setq denote-directory (expand-file-name "~/Documents/notes/"))
+
+  ;; Automatically rename Denote buffers when opening them so that
+  ;; instead of their long file name they have, for example, a literal
+  ;; "[D]" followed by the file's title.  Read the docstring of
+  ;; `denote-rename-buffer-format' for how to modify this.
+  (denote-rename-buffer-mode 1))
 
 ;; zsh -- NixOS has no /bin/zsh; resolve the real path via PATH or $SHELL.
 (let ((zsh (or (executable-find "zsh") (getenv "SHELL"))))
