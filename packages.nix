@@ -2,8 +2,9 @@
 
 with pkgs; [
   # CLI tools
-  aspell
-  aspellDicts.en
+  # aspellWithDicts wraps the binary so it can find its dictionaries;
+  # plain aspell + aspellDicts.en leaves the dict-dir unset (flyspell: "no word lists found")
+  (aspellWithDicts (d: [ d.en d.en-computers ]))
   btop
   choose
   fastfetch
