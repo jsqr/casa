@@ -43,7 +43,27 @@ in
     options = "--delete-older-than 14d";
   };
 
-  programs.fzf.enable = true;
+  programs.fzf = {
+    enable = true;
+    # Kanagawa Dragon. bg/gutter = -1 keeps popups transparent to the
+    # terminal background; accents (pointer/marker/prompt) use KD hues.
+    colors = {
+      "fg" = "#c5c9c5";
+      "bg" = "-1";
+      "hl" = "#c4746e";
+      "fg+" = "#c5c9c5";
+      "bg+" = "#282727";
+      "hl+" = "#c4746e";
+      "info" = "#8a9a7b";
+      "border" = "#625e5a";
+      "prompt" = "#8ba4b0";
+      "pointer" = "#c4746e";
+      "marker" = "#87a987";
+      "spinner" = "#b6927b";
+      "header" = "#8992a7";
+      "gutter" = "-1";
+    };
+  };
   programs.zoxide.enable = true;
 
   programs.atuin = {
@@ -58,6 +78,21 @@ in
       keymap_mode = "emacs";
       filter_mode = "global";
       filter_mode_shell_up_key_binding = "session";
+      theme.name = "kanagawa-dragon";
+    };
+    # Kanagawa Dragon theme, written to ~/.config/atuin/themes/.
+    themes."kanagawa-dragon" = {
+      theme.name = "kanagawa-dragon";
+      colors = {
+        Base = "#c5c9c5";
+        Title = "#c4746e";
+        Important = "#b6927b";
+        Guidance = "#8ba4b0";
+        Annotation = "#737c73";
+        AlertInfo = "#8a9a7b";
+        AlertWarn = "#c4b28a";
+        AlertError = "#c4746e";
+      };
     };
   };
 
@@ -79,6 +114,82 @@ in
     enableZshIntegration = true;
     git = true;
     icons = "auto";
+    # Kanagawa Dragon, written to ~/.config/eza/theme.yml. Omitted keys fall
+    # back to eza's built-in defaults; only foregrounds are pinned to KD hues.
+    theme = {
+      filekinds = {
+        normal.foreground = "#c5c9c5";
+        directory.foreground = "#8ba4b0";
+        symlink.foreground = "#8ea4a2";
+        pipe.foreground = "#737c73";
+        block_device.foreground = "#b6927b";
+        char_device.foreground = "#b6927b";
+        socket.foreground = "#737c73";
+        special.foreground = "#a292a3";
+        executable.foreground = "#87a987";
+        mount_point.foreground = "#8ba4b0";
+      };
+      perms = {
+        user_read.foreground = "#c5c9c5";
+        user_write.foreground = "#c4b28a";
+        user_execute_file.foreground = "#87a987";
+        user_execute_other.foreground = "#87a987";
+        group_read.foreground = "#a6a69c";
+        group_write.foreground = "#c4b28a";
+        group_execute.foreground = "#87a987";
+        other_read.foreground = "#737c73";
+        other_write.foreground = "#c4b28a";
+        other_execute.foreground = "#87a987";
+        special_user_file.foreground = "#a292a3";
+        special_other.foreground = "#737c73";
+        attribute.foreground = "#737c73";
+      };
+      size = {
+        major.foreground = "#c5c9c5";
+        minor.foreground = "#8ea4a2";
+        number_byte.foreground = "#c5c9c5";
+        number_kilo.foreground = "#c5c9c5";
+        number_mega.foreground = "#8ba4b0";
+        number_giga.foreground = "#a292a3";
+        number_huge.foreground = "#a292a3";
+        unit_byte.foreground = "#737c73";
+        unit_kilo.foreground = "#8ba4b0";
+        unit_mega.foreground = "#8ba4b0";
+        unit_giga.foreground = "#a292a3";
+        unit_huge.foreground = "#c4b28a";
+      };
+      users = {
+        user_you.foreground = "#c5c9c5";
+        user_root.foreground = "#c4746e";
+        user_other.foreground = "#a292a3";
+        group_yours.foreground = "#a6a69c";
+        group_other.foreground = "#737c73";
+        group_root.foreground = "#c4746e";
+      };
+      links = {
+        normal.foreground = "#8ea4a2";
+        multi_link_file.foreground = "#c4b28a";
+      };
+      git = {
+        new.foreground = "#87a987";
+        modified.foreground = "#c4b28a";
+        deleted.foreground = "#c4746e";
+        renamed.foreground = "#8ea4a2";
+        typechange.foreground = "#a292a3";
+        ignored.foreground = "#737c73";
+        conflicted.foreground = "#c4746e";
+      };
+      git_repo = {
+        branch_main.foreground = "#c5c9c5";
+        branch_other.foreground = "#a292a3";
+        git_clean.foreground = "#87a987";
+        git_dirty.foreground = "#c4746e";
+      };
+      punctuation.foreground = "#625e5a";
+      date.foreground = "#8a9a7b";
+      inode.foreground = "#737c73";
+      header.foreground = "#a6a69c";
+    };
   };
 
   programs.emacs = {
@@ -113,7 +224,6 @@ in
       orderless
       consult
       minuet
-      gruvbox-theme
       kanagawa-themes
     ];
   };
@@ -178,6 +288,30 @@ in
       line-numbers = true;
       side-by-side = true;
       syntax-theme = "Kanagawa Dragon";
+
+      # keep syntax-highlighted text; only tint the background so
+      # added/removed lines stay legible under Kanagawa Dragon.
+      minus-style = ''syntax "#43242b"'';
+      minus-non-emph-style = ''syntax "#43242b"'';
+      minus-emph-style = ''syntax "#663639"'';
+      minus-empty-line-marker-style = ''normal "#43242b"'';
+
+      plus-style = ''syntax "#2b3328"'';
+      plus-non-emph-style = ''syntax "#2b3328"'';
+      plus-emph-style = ''syntax "#405d40"'';
+      plus-empty-line-marker-style = ''normal "#2b3328"'';
+
+      # muted grays/blues for gutter + hunk headers (KD-native)
+      line-numbers-minus-style = "#c4746e";
+      line-numbers-plus-style = "#87a987";
+      line-numbers-zero-style = "#625e5a";
+      line-numbers-left-style = "#625e5a";
+      line-numbers-right-style = "#625e5a";
+      hunk-header-decoration-style = ''#625e5a box'';
+      hunk-header-file-style = "#8ba4b0";
+      hunk-header-line-number-style = "#c4b28a";
+      file-style = ''#c5c9c5 bold'';
+      file-decoration-style = ''#625e5a ul'';
     };
   };
 
@@ -271,8 +405,9 @@ in
       set -g renumber-windows on
       set -g set-clipboard on
 
-      set -g pane-border-style "fg=colour238"
-      # highlight accent: #c4746e (Kanagawa dragonRed); was colour166 (gruvbox orange)
+      # Kanagawa Dragon: dim border #393836 (dragonBlack5), active accent
+      # #c4746e (dragonRed); was colour238/colour166 (gruvbox era).
+      set -g pane-border-style "fg=#393836"
       set -g pane-active-border-style "fg=#c4746e,bold"
       set -g pane-border-indicators arrows
 
@@ -280,9 +415,10 @@ in
       bind - split-window -v -c "#{pane_current_path}"
       bind c new-window -c "#{pane_current_path}"
 
-      set -g status-style "bg=colour235,fg=colour248"
+      # Kanagawa Dragon: status bg #181616 (dragonBlack3), fg #a6a69c (dragonGray).
+      set -g status-style "bg=#181616,fg=#a6a69c"
       set -g status-left "#[fg=#c4746e,bold] #S "
-      set -g status-right "#[fg=colour248] %Y-%m-%d %H:%M "
+      set -g status-right "#[fg=#a6a69c] %Y-%m-%d %H:%M "
       set -g status-left-length 20
       setw -g window-status-current-style "fg=#c4746e,bold"
       setw -g window-status-current-format " #I:#W "
