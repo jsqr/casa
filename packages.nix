@@ -56,7 +56,7 @@ with pkgs; [
   rustup
   zig
 ] ++ [
-  unstable.mistral-vibe
-  # unstable.pi-coding-agent
+  # unstable.mistral-vibe
+  unstable.pi-coding-agent
   unstable.pyrefly
 ]
