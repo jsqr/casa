@@ -3,12 +3,11 @@
 let
   unfreePkgs = import inputs.nixpkgs-unstable { inherit (pkgs) system; config.allowUnfree = true; };
 
-  # Imperative toolchain managers (rustup, uv) keep state under $HOME that Nix
-  # never touches — system.autoUpgrade only bumps the rustup/uv *binaries*, not
-  # the toolchains/tools they manage. On thalia these are refreshed interactively
-  # by scripts/update.sh; melpomene is headless and self-updating, so it runs the
-  # same refresh on a nightly user timer instead. Each step is allowed to fail
-  # independently so one broken upgrade doesn't block the other.
+  # Imperative toolchain managers (rustup, uv) manage their own state under $HOME.
+  # system.autoUpgrade only bumps the rustup/uv binaries. On thalia these are
+  # refreshed interactively by scripts/update.sh; melpomene is headless and
+  # self-updating, so it runs the same refresh on a nightly user timer instead.
+  # Each step is allowed to fail independently.
   toolchainUpdate = pkgs.writeShellScript "toolchain-update" ''
     set -u
     echo "=== rustup update ==="
@@ -60,4 +59,21 @@ in
       hosts = [ "https://github.com" ];
     };
   };
+
+  services.llama-cpp = {
+    enable = true;
+
+    # Download if model not present
+    modelsPreset = {
+      "Qwen3-Embedding-8B" = {
+        hf-repo = "Qwen/Qwen3-Embedding-8B-GGUF";
+        hf-file = "Qwen3-Embedding-8B-Q5_K_M.gguf";
+        alias = "Qwen/Qwen3-Embedding-8B";
+        embedding = "true";
+        pooling = "last";
+        ctx-size = "32768";
+      };
+    };
+  };
+
 }

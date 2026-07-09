@@ -4,9 +4,9 @@ let
   unstable = import inputs.nixpkgs-unstable { inherit (pkgs) system; config.allowUnfree = true; };
 
   # Tree-sitter grammars for the *-ts-mode major modes in dotfiles/emacs.
-  # Version-sensitive native .so's, so pin them via Nix rather than building
-  # them at runtime (M-x treesit-install-language-grammar / *-install-grammar).
-  # Symlinked into ~/.emacs.d/tree-sitter below, where Emacs searches by default.
+  # Native .so's are version-sensitive, so pin them via Nix rather than building
+  # at runtime (M-x treesit-install-language-grammar / *-install-grammar).
+  # Symlinked into ~/.emacs.d/tree-sitter.
   emacsTreesitGrammars =
     pkgs.emacsPackages.treesit-grammars.with-grammars (g: with g; [
       tree-sitter-python
@@ -101,8 +101,7 @@ in
     config = {
       theme = "Kanagawa Dragon";
     };
-    # Kanagawa Dragon isn't a bat built-in; ship the tmTheme and let
-    # home-manager rebuild the cache. delta reads the same theme DB.
+    # delta and bat read the same theme DB.
     themes."Kanagawa Dragon" = {
       src = ../dotfiles/bat;
       file = "Kanagawa Dragon.tmTheme";
@@ -228,8 +227,6 @@ in
     ];
   };
   services.emacs.enable = true;
-
-  # services.ollama.enable = true;
 
   programs.zsh = {
     enable = true;

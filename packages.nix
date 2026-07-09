@@ -2,8 +2,7 @@
 
 with pkgs; [
   # CLI tools
-  # aspellWithDicts wraps the binary so it can find its dictionaries;
-  # plain aspell + aspellDicts.en leaves the dict-dir unset (flyspell: "no word lists found")
+  # aspellWithDicts wraps the binary so it can find its dictionaries
   (aspellWithDicts (d: [ d.en d.en-computers ]))
   btop
   choose
