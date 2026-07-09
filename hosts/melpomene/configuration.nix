@@ -216,6 +216,50 @@
 
   networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ 5432 ];
 
+  # ------------------------------------------------------------------
+  # llama.cpp embedding server.
+  # modelsPreset is rendered to an INI file and passed via --models-preset
+  # ------------------------------------------------------------------
+  services.llama-cpp = {
+    enable = true;
+
+    # Router LRU cap: at most 2 of the 3 presets resident at once
+    extraFlags = [ "--models-max" "2" ];
+
+    modelsPreset = {
+      "Qwen3-Embedding-8B" = {
+        hf-repo = "Qwen/Qwen3-Embedding-8B-GGUF";
+        hf-file = "Qwen3-Embedding-8B-Q5_K_M.gguf";
+        alias = "Qwen/Qwen3-Embedding-8B";
+        embedding = "true";
+        pooling = "last";
+        ctx-size = "4096";
+      };
+
+      # MoE chat models; 3-4B params are active per token
+      # UD-Q4_K_XL is unsloth's dynamic 4-bit (important layers upcast to
+      # 8/16-bit). jinja = "on" uses each model's built-in chat template.
+      # sleep-idle-seconds: unload this model's weights + KV cache after 10 min idle
+      "gemma-4-26B-A4B" = {
+        hf-repo = "unsloth/gemma-4-26B-A4B-it-GGUF";
+        hf-file = "gemma-4-26B-A4B-it-UD-Q4_K_XL.gguf";
+        alias = "unsloth/gemma-4-26B-A4B-it";
+        jinja = "on";
+        ctx-size = "32768";
+        sleep-idle-seconds = "600";
+      };
+
+      "Qwen3.5-35B-A3B" = {
+        hf-repo = "unsloth/Qwen3.5-35B-A3B-GGUF";
+        hf-file = "Qwen3.5-35B-A3B-UD-Q4_K_XL.gguf";
+        alias = "unsloth/Qwen3.5-35B-A3B";
+        jinja = "on";
+        ctx-size = "32768";
+        sleep-idle-seconds = "600";
+      };
+    };
+  };
+
   virtualisation.docker = {
     enable = true;
     autoPrune.enable = true;

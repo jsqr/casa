@@ -60,20 +60,4 @@ in
     };
   };
 
-  services.llama-cpp = {
-    enable = true;
-
-    # Download if model not present
-    modelsPreset = {
-      "Qwen3-Embedding-8B" = {
-        hf-repo = "Qwen/Qwen3-Embedding-8B-GGUF";
-        hf-file = "Qwen3-Embedding-8B-Q5_K_M.gguf";
-        alias = "Qwen/Qwen3-Embedding-8B";
-        embedding = "true";
-        pooling = "last";
-        ctx-size = "32768";
-      };
-    };
-  };
-
 }
