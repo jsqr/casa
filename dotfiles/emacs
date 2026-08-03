@@ -67,6 +67,7 @@
 (setq-default fill-column 92)
 (add-hook 'prog-mode-hook 'display-fill-column-indicator-mode)
 (add-hook 'python-base-mode-hook (lambda () (setq-local fill-column 88)))
+(add-hook 'markdown-mode-hook (lambda () (setq-local fill-column 80)))
 
 ;; diminish minor modes from the mode line
 (use-package diminish)
