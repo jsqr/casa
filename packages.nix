@@ -28,7 +28,6 @@ with pkgs; [
   llama-cpp
   miller
   mosh
-  opencode
   pandoc
   poppler-utils
   procs
@@ -55,7 +54,6 @@ with pkgs; [
   rustup
   zig
 ] ++ [
-  unstable.mistral-vibe
   unstable.pi-coding-agent
   unstable.pyrefly
 ]
