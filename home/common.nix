@@ -398,6 +398,10 @@ in
       set -as terminal-features ",xterm-256color:RGB"
       set -as terminal-features ",xterm-ghostty:RGB"
 
+      # Forward modified keys (e.g. Shift/Ctrl+Enter) to apps that ask for
+      # them (pi agent warns without this)
+      set -g extended-keys on
+
       setw -g pane-base-index 1
       set -g renumber-windows on
       set -g set-clipboard on
