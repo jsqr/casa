@@ -28,6 +28,13 @@ in
 
   home.packages = [ pkgs.code-server unfreePkgs.claude-code ];
 
+  # NixOS-only (reads /run/current-system, systemctl), so wired here
+  # rather than in common.nix alongside the other bin/ scripts.
+  home.file."bin/status" = {
+    source = ../scripts/status.sh;
+    executable = true;
+  };
+
   systemd.user.services.toolchain-update = {
     Unit.Description = "Update imperative toolchain managers (rustup, uv tools)";
     Service = {

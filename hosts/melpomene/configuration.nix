@@ -210,8 +210,21 @@
   # createHome, and its unit uses ReadWritePaths=${dataDir} — which makes
   # systemd's mount-namespace setup fail (status=226/NAMESPACE) if the
   # path doesn't exist yet. tmpfiles materializes it before activation.
+  #
+  # /root/.gitconfig: nixos-upgrade runs as root with no SUDO_UID, so Nix's
+  # libgit2 fetcher refuses the jj-owned flake repo ("repository path is not
+  # owned by current user"), and --commit-lock-file additionally needs a git
+  # identity to author the lock-bump commit. A store-symlinked gitconfig
+  # provides both.
   systemd.tmpfiles.rules = [
     "d /data/18 0700 postgres postgres -"
+    "L+ /root/.gitconfig - - - - ${pkgs.writeText "root-gitconfig" ''
+      [safe]
+          directory = /home/jj/jsqr/casa
+      [user]
+          name = melpomene autoupgrade
+          email = root@melpomene.jsqr.org
+    ''}"
   ];
 
   networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ 5432 ];
