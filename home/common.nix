@@ -401,6 +401,7 @@ in
       # Forward modified keys (e.g. Shift/Ctrl+Enter) to apps that ask for
       # them (pi agent warns without this)
       set -g extended-keys on
+      set -g extended-keys-format csi-u
 
       setw -g pane-base-index 1
       set -g renumber-windows on
