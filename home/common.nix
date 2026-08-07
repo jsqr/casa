@@ -8,14 +8,24 @@ let
   # at runtime (M-x treesit-install-language-grammar / *-install-grammar).
   # Symlinked into ~/.emacs.d/tree-sitter.
   emacsTreesitGrammars =
-    pkgs.emacsPackages.treesit-grammars.with-grammars (g: with g; [
-      tree-sitter-python
-      tree-sitter-rust
-      tree-sitter-c
-      tree-sitter-julia
-      tree-sitter-zig
-      tree-sitter-typst
-    ]);
+    let
+      base = pkgs.emacsPackages.treesit-grammars.with-grammars (g: with g; [
+        tree-sitter-python
+        tree-sitter-rust
+        tree-sitter-c
+        tree-sitter-julia
+        tree-sitter-typst
+      ]);
+      # zig-ts-mode requires the tree-sitter-grammars zig grammar, not the one
+      # in treesit-grammars.
+      zig = unstable.tree-sitter-grammars.tree-sitter-zig;
+      dylib = pkgs.stdenv.hostPlatform.extensions.sharedLibrary;
+    in
+    pkgs.runCommand "emacs-treesit-grammars" { } ''
+      mkdir -p $out/lib
+      ln -s ${base}/lib/* $out/lib/
+      ln -s ${zig}/parser $out/lib/libtree-sitter-zig${dylib}
+    '';
 in
 {
   home.stateVersion = "24.11";
