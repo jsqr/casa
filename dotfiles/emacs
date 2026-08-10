@@ -354,9 +354,9 @@
 
 (defun jj/set-gui-font (&optional frame)
   (when (and (display-graphic-p frame)
-             (member "FiraCode Nerd Font Mono" (font-family-list frame)))
+             (member "JuliaMono" (font-family-list frame)))
     (set-face-attribute 'default frame
-                        :family "FiraCode Nerd Font Mono" :height 130)
+                        :family "JuliaMono" :height 130)
     ;; Changing the font preserves pixel size, which would otherwise shift
     ;; the column/row count; re-assert the 120x48 grid in the new font.
     (set-frame-size frame 110 50)))

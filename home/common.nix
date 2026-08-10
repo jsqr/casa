@@ -122,7 +122,7 @@ in
     enable = true;
     enableZshIntegration = true;
     git = true;
-    icons = "auto";
+    # No icons: JuliaMono carries no Nerd Font glyphs.
     # Kanagawa Dragon, written to ~/.config/eza/theme.yml. Omitted keys fall
     # back to eza's built-in defaults; only foregrounds are pinned to KD hues.
     theme = {

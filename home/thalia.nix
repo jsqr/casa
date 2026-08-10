@@ -1,7 +1,7 @@
 { config, pkgs, lib, inputs, ... }:
 
 let
-  unfreePkgs = import inputs.nixpkgs-unstable { inherit (pkgs) system; config.allowUnfree = true; };
+  unstable = import inputs.nixpkgs-unstable { inherit (pkgs) system; config.allowUnfree = true; };
 in
 {
   imports = [ ./common.nix ];
@@ -9,7 +9,8 @@ in
   home.username = "jj";
   home.homeDirectory = "/Users/jj";
 
-  home.packages = [ unfreePkgs.claude-code pkgs.postgresql_18 ];
+  # julia-mono from unstable: nixos-26.05 is still on 0.062.
+  home.packages = [ unstable.claude-code pkgs.postgresql_18 unstable.julia-mono ];
 
   programs.gh.enable = true;
 
@@ -20,7 +21,10 @@ in
       # theme = "Monokai Pro";
       # theme = "Gruvbox Dark Hard";  # hard = darker bg (#1d2021)
       theme = "Kanagawa Dragon";
-      font-family = "FiraCode Nerd Font Mono";
+      # JuliaMono has no Nerd glyphs; Fira Code (brew cask) is the fallback
+      font-family = [ "JuliaMono" "FiraCode Nerd Font Mono" ];
+      # ss01 = single-story g, zero = slashed zero
+      font-feature = [ "ss01" "zero" ];
       keybind = "shift+enter=text:\\x1b\\r";
       shell-integration-features = "ssh-env,ssh-terminfo";
       clipboard-write = "allow";
