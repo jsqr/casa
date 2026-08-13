@@ -20,7 +20,6 @@ with pkgs; [
   git-extras
   glow
   gnumake
-  harlequin
   htop
   hyperfine
   jq
@@ -40,7 +39,6 @@ with pkgs; [
   typst
   yq
   uv
-  visidata
   xh
   # Language servers
   nil
