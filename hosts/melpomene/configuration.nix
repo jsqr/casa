@@ -28,11 +28,25 @@
   system.autoUpgrade = {
     enable = true;
     flake = "/home/jj/jsqr/casa#melpomene";
-    flags = [ "--update-input" "nixpkgs" "--commit-lock-file" "-L" ];
+    flags = [ "-L" ];
     dates = "04:00";
     randomizedDelaySec = "45min";
     allowReboot = false;
   };
+
+  # bump flake lock as jj, not root
+  # sync with origin first (ff-only; don't start a rebase), then push
+  systemd.services.nixos-upgrade.serviceConfig.ExecStartPre =
+    "${pkgs.writeShellScript "casa-lock-update" ''
+      set -euo pipefail
+      exec ${pkgs.util-linux}/bin/runuser -u jj -- ${pkgs.bash}/bin/bash -euo pipefail -c '
+        cd /home/jj/jsqr/casa
+        ${pkgs.git}/bin/git fetch origin
+        ${pkgs.git}/bin/git merge --ff-only @{u}
+        ${config.nix.package}/bin/nix flake update nixpkgs --commit-lock-file
+        ${pkgs.git}/bin/git push origin main
+      '
+    ''}";
 
   # ------------------------------------------------------------------
   # Boot
@@ -207,23 +221,17 @@
   };
 
   # The module sets `users.users.postgres.home = dataDir` but does not
-  # createHome, and its unit uses ReadWritePaths=${dataDir} — which makes
+  # createHome, and its unit uses ReadWritePaths=${dataDir}, which makes
   # systemd's mount-namespace setup fail (status=226/NAMESPACE) if the
   # path doesn't exist yet. tmpfiles materializes it before activation.
   #
-  # /root/.gitconfig: nixos-upgrade runs as root with no SUDO_UID, so Nix's
-  # libgit2 fetcher refuses the jj-owned flake repo ("repository path is not
-  # owned by current user"), and --commit-lock-file additionally needs a git
-  # identity to author the lock-bump commit. A store-symlinked gitconfig
-  # provides both.
+  # /root/.gitconfig: nixos-upgrade runs as root with no SUDO_UID;
+  # safe.directory whitelists it, and root doesn't need a git identity
   systemd.tmpfiles.rules = [
     "d /data/18 0700 postgres postgres -"
     "L+ /root/.gitconfig - - - - ${pkgs.writeText "root-gitconfig" ''
       [safe]
           directory = /home/jj/jsqr/casa
-      [user]
-          name = melpomene autoupgrade
-          email = root@melpomene.jsqr.org
     ''}"
   ];
 
