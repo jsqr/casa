@@ -1,13 +1,30 @@
 autoload -Uz add-zsh-hook
 
 git_prompt_info() {
-  local ref
-  ref=$(git symbolic-ref --short HEAD 2>/dev/null) || return
-  local dirty
-  if [[ -n $(git status --porcelain 2>/dev/null) ]]; then
-    dirty="%F{red}*%f"
+  local gitdir ref state dirty
+  gitdir=$(git rev-parse --git-dir 2>/dev/null) || return
+
+  # Detached HEAD: fall back to short SHA, flagged in red
+  if ! ref=$(git symbolic-ref --short HEAD 2>/dev/null); then
+    ref="%F{red}➦ $(git rev-parse --short HEAD 2>/dev/null)%f%F{yellow}"
   fi
-  echo "%F{yellow}‹${ref}${dirty}%F{yellow}›%f "
+
+  # In-progress operations, detected from state files in the git dir
+  if   [[ -d $gitdir/rebase-merge || -d $gitdir/rebase-apply ]]; then state='rebase'
+  elif [[ -f $gitdir/MERGE_HEAD ]];       then state='merge'
+  elif [[ -f $gitdir/CHERRY_PICK_HEAD ]]; then state='cherry-pick'
+  elif [[ -f $gitdir/REVERT_HEAD ]];      then state='revert'
+  elif [[ -f $gitdir/BISECT_LOG ]];       then state='bisect'
+  fi
+  [[ -n $state ]] && state="%F{red}|${state}%f%F{yellow}"
+
+  # One status call: * = dirty, ✖ = unmerged conflicts
+  local status_out=$(git status --porcelain 2>/dev/null)
+  [[ -n $status_out ]] && dirty="%F{red}*%f"
+  local -a lines=(${(f)status_out})
+  (( ${#${(M)lines:#(U?|?U|AA|DD)*}} )) && dirty="%F{red}✖%f"
+
+  echo "%F{yellow}‹${ref}${state}${dirty}%F{yellow}›%f "
 }
 
 virtualenv_prompt_info() {
