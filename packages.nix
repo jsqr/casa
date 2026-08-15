@@ -41,11 +41,18 @@ with pkgs; [
   uv
   xh
   # Language servers
+  haskell-language-server
   nil
   python3Packages.python-lsp-server
   tinymist
   zls
   # Toolchain managers / runtimes
+  # Bare ghc: libraries come from cabal per project, not a global package db.
+  # HLS's bundled ormolu can't parse cabal-version 3.16, so `cabal init` new
+  # projects with --cabal-version=3.12 or format-on-save errors.
+  cabal-install
+  ghc
+  hlint
   julia-bin
   nodejs_22
   python314

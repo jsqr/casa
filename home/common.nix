@@ -15,6 +15,7 @@ let
         tree-sitter-c
         tree-sitter-julia
         tree-sitter-typst
+        tree-sitter-haskell
       ]);
       # zig-ts-mode requires the tree-sitter-grammars zig grammar, not the one
       # in treesit-grammars.
@@ -220,6 +221,8 @@ in
       eglot-jl
       rust-mode
       zig-ts-mode
+      haskell-mode
+      haskell-ts-mode
       yaml-mode
       toml-mode
       markdown-mode
