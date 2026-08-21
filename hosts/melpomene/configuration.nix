@@ -1,5 +1,21 @@
 { config, pkgs, lib, inputs, ... }:
 
+let
+  # The nightly lock bump and the subsequent git push (ExecStartPre and
+  # ExecStartPost in the nixos-upgrade block below) run as jj, not root,
+  # in the flake checkout. Only the command body is different.
+  #
+  # The body is interpolated into a single-quoted `bash -c '...'`, so it
+  # must not contain single quotes.
+  casaGit = name: body: "${pkgs.writeShellScript name ''
+    set -euo pipefail
+    exec ${pkgs.util-linux}/bin/runuser -u jj -- ${pkgs.bash}/bin/bash -euo pipefail -c '
+      cd /home/jj/jsqr/casa
+      ${body}
+    '
+  ''}";
+in
+
 {
   imports = [
     ./hardware-configuration.nix
@@ -34,19 +50,21 @@
     allowReboot = false;
   };
 
-  # bump flake lock as jj, not root
-  # sync with origin first (ff-only; don't start a rebase), then push
-  systemd.services.nixos-upgrade.serviceConfig.ExecStartPre =
-    "${pkgs.writeShellScript "casa-lock-update" ''
-      set -euo pipefail
-      exec ${pkgs.util-linux}/bin/runuser -u jj -- ${pkgs.bash}/bin/bash -euo pipefail -c '
-        cd /home/jj/jsqr/casa
-        ${pkgs.git}/bin/git fetch origin
-        ${pkgs.git}/bin/git merge --ff-only @{u}
-        ${config.nix.package}/bin/nix flake update --commit-lock-file
-        ${pkgs.git}/bin/git push origin main
-      '
-    ''}";
+  # Bump the flake lock as jj: first sync with origin (ff-only;
+  # don't start a rebase), then update every input and commit.
+  #
+  # The push is ExecStartPost so an unreachable origin can't abort before
+  # the rebuild; a lock that fails to build never reaches the origin.
+  systemd.services.nixos-upgrade.serviceConfig = {
+    ExecStartPre = casaGit "casa-lock-update" ''
+      ${pkgs.git}/bin/git fetch origin
+      ${pkgs.git}/bin/git merge --ff-only @{u}
+      ${config.nix.package}/bin/nix flake update --commit-lock-file
+    '';
+    ExecStartPost = casaGit "casa-lock-push" ''
+      ${pkgs.git}/bin/git push origin main
+    '';
+  };
 
   # ------------------------------------------------------------------
   # Boot
