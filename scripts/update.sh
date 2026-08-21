@@ -27,15 +27,21 @@ rustup check
 echo -e "\n=== UV tools ==="
 uv tool list
 
+# melpomene pushes a lock bump most nights, so this checkout is usually
+# behind. Preview the remote repo before the ff-only merge happens below.
+echo -e "\n=== casa repo ==="
+git -C "$FLAKE" fetch origin --quiet || echo "fetch failed" >&2
+git -C "$FLAKE" status -sb | head -1
+
 echo
 read -p "Run updates? (y/n) " -n 1 -r; echo
 [[ $REPLY =~ ^[Yy]$ ]] || exit 0
 
 # Run the steps as a single &&-chain so a failure aborts the rest and the
 # success line only prints if every step succeeded. nix flake update leaves
-# flake.lock modified for you to review and commit yourself.
+# flake.lock modified for manual review and commit.
 if brew upgrade \
-    && ( cd "$FLAKE" && nix flake update ) \
+    && ( cd "$FLAKE" && git merge --ff-only '@{u}' && nix flake update ) \
     && home-manager switch --flake "$FLAKE#thalia" \
     && rustup update \
     && uv tool upgrade --all; then
