@@ -1,7 +1,7 @@
 { config, pkgs, lib, inputs, ... }:
 
 let
-  unstable = import inputs.nixpkgs-unstable { inherit (pkgs) system; config.allowUnfree = true; };
+  unstable = import inputs.nixpkgs-unstable { inherit (pkgs.stdenv.hostPlatform) system; config.allowUnfree = true; };
 
   # Tree-sitter grammars for the *-ts-mode major modes in dotfiles/emacs.
   # Native .so's are version-sensitive, so pin them via Nix rather than building

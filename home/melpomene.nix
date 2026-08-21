@@ -1,7 +1,7 @@
 { config, pkgs, lib, inputs, ... }:
 
 let
-  unfreePkgs = import inputs.nixpkgs-unstable { inherit (pkgs) system; config.allowUnfree = true; };
+  unfreePkgs = import inputs.nixpkgs-unstable { inherit (pkgs.stdenv.hostPlatform) system; config.allowUnfree = true; };
 
   # Imperative toolchain managers (rustup, uv) manage their own state under $HOME.
   # system.autoUpgrade only bumps the rustup/uv binaries. On thalia these are

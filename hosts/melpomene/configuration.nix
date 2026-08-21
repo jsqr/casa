@@ -201,7 +201,7 @@ in
 
     dataDir = "/data/18";
 
-    extraPlugins = ps: with ps; [ pgvector ];
+    extensions = ps: with ps; [ pgvector ];
 
     # Bind everywhere; firewall below restricts reachability to tailscale0.
     # listen_addresses takes IPs/hostnames, not interface names, so this
