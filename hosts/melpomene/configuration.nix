@@ -81,8 +81,9 @@ in
   # Networking — wired ethernet only.
   # useDHCP is set to false explicitly because with networkd it
   # otherwise defaults to true and would run DHCP on top of the static
-  # address declared below. Firewall is left to defaults; openssh and
-  # samba both open their own ports via `openFirewall = true`.
+  # address declared below. Firewall is left to defaults; openssh opens its
+  # own port via `openFirewall = true`. Samba and Postgres are instead gated
+  # to tailscale0 (see networking.firewall.interfaces below).
   # ------------------------------------------------------------------
   networking = {
     hostName = "melpomene";
@@ -254,7 +255,7 @@ in
     ''}"
   ];
 
-  networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ 5432 ];
+  networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ 5432 445 ];
 
   # ------------------------------------------------------------------
   # llama.cpp embedding server.
@@ -305,9 +306,15 @@ in
     autoPrune.enable = true;
   };
 
+  # Tailnet-only: openFirewall would open 139/445 on every interface, which
+  # put the share on the LAN. The tailscale0 rule above gates it the same way
+  # Postgres is gated. nmbd (NetBIOS browsing) and winbindd (AD integration)
+  # are both unused — melpomene never advertised _smb._tcp over mDNS anyway.
   services.samba = {
     enable = true;
-    openFirewall = true;
+    openFirewall = false;
+    enableNmbd = false;
+    enableWinbindd = false;
     settings = {
       global = {
         "workgroup" = "WORKGROUP";
