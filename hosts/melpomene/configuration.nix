@@ -43,7 +43,7 @@
         cd /home/jj/jsqr/casa
         ${pkgs.git}/bin/git fetch origin
         ${pkgs.git}/bin/git merge --ff-only @{u}
-        ${config.nix.package}/bin/nix flake update nixpkgs --commit-lock-file
+        ${config.nix.package}/bin/nix flake update --commit-lock-file
         ${pkgs.git}/bin/git push origin main
       '
     ''}";
