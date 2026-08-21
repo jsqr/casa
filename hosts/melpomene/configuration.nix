@@ -104,6 +104,7 @@ in
   users.users.jj = {
     isNormalUser = true;
     uid = 1000;
+    linger = true; # keep jj's systemd user manager running w/o login session
     description = "Johnathan Jenkins";
     extraGroups = [ "wheel" "docker" ];
     shell = pkgs.zsh;
