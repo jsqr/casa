@@ -11,13 +11,6 @@
 .directory
 .Trash-*
 
-# === VS Code ===
-.vscode/
-*.code-workspace
-
-# === Zed ===
-.zed/
-
 # === Emacs ===
 *~
 \#*\#
@@ -26,5 +19,13 @@
 auto-save-list/
 .dir-locals.el
 
-# === Personal convention ===
+# === VSCodium ===
+.vscode/
+*.code-workspace
+
+# === Zed (deprecated VC-ware) ===
+.zed/
+
+# === Scratch directory local convention ===
 scratch/
+.scratch/
