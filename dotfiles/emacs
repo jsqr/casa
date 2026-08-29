@@ -90,12 +90,15 @@
   :demand t
   :config
   (dirvish-override-dired-mode)
+  ;; dirvish.el does not require the side-window extension
+  (require 'dirvish-side)
   :custom
   (dirvish-attributes '(file-size vc-state subtree-state))
   (dirvish-mode-line-format
    '(:left (sort symlink) :right (omit yank index)))
   :bind
   (("C-c d" . dirvish)
+   ("C-c D" . dirvish-side)
    :map dirvish-mode-map
    ("a"   . dirvish-quick-access)
    ("f"   . dirvish-file-info-menu)
