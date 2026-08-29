@@ -1,6 +1,8 @@
 { config, pkgs, lib, inputs, ... }:
 
 let
+  c = import ../lib/kanagawa-dragon.nix;
+
   unstable = import inputs.nixpkgs-unstable { inherit (pkgs.stdenv.hostPlatform) system; config.allowUnfree = true; };
 
   # Tree-sitter grammars for the *-ts-mode major modes in dotfiles/emacs.
@@ -59,19 +61,19 @@ in
     # Kanagawa Dragon. bg/gutter = -1 keeps popups transparent to the
     # terminal background; accents (pointer/marker/prompt) use KD hues.
     colors = {
-      "fg" = "#c5c9c5";
+      "fg" = c.dragonWhite;
       "bg" = "-1";
-      "hl" = "#c4746e";
-      "fg+" = "#c5c9c5";
-      "bg+" = "#282727";
-      "hl+" = "#c4746e";
-      "info" = "#8a9a7b";
-      "border" = "#625e5a";
-      "prompt" = "#8ba4b0";
-      "pointer" = "#c4746e";
-      "marker" = "#87a987";
-      "spinner" = "#b6927b";
-      "header" = "#8992a7";
+      "hl" = c.dragonRed;
+      "fg+" = c.dragonWhite;
+      "bg+" = c.dragonBlack4;
+      "hl+" = c.dragonRed;
+      "info" = c.dragonGreen2;
+      "border" = c.dragonBlack6;
+      "prompt" = c.dragonBlue2;
+      "pointer" = c.dragonRed;
+      "marker" = c.dragonGreen;
+      "spinner" = c.dragonOrange;
+      "header" = c.dragonViolet;
       "gutter" = "-1";
     };
   };
@@ -95,14 +97,14 @@ in
     themes."kanagawa-dragon" = {
       theme.name = "kanagawa-dragon";
       colors = {
-        Base = "#c5c9c5";
-        Title = "#c4746e";
-        Important = "#b6927b";
-        Guidance = "#8ba4b0";
-        Annotation = "#737c73";
-        AlertInfo = "#8a9a7b";
-        AlertWarn = "#c4b28a";
-        AlertError = "#c4746e";
+        Base = c.dragonWhite;
+        Title = c.dragonRed;
+        Important = c.dragonOrange;
+        Guidance = c.dragonBlue2;
+        Annotation = c.dragonAsh;
+        AlertInfo = c.dragonGreen2;
+        AlertWarn = c.dragonYellow;
+        AlertError = c.dragonRed;
       };
     };
   };
@@ -128,77 +130,77 @@ in
     # back to eza's built-in defaults; only foregrounds are pinned to KD hues.
     theme = {
       filekinds = {
-        normal.foreground = "#c5c9c5";
-        directory.foreground = "#8ba4b0";
-        symlink.foreground = "#8ea4a2";
-        pipe.foreground = "#737c73";
-        block_device.foreground = "#b6927b";
-        char_device.foreground = "#b6927b";
-        socket.foreground = "#737c73";
-        special.foreground = "#a292a3";
-        executable.foreground = "#87a987";
-        mount_point.foreground = "#8ba4b0";
+        normal.foreground = c.dragonWhite;
+        directory.foreground = c.dragonBlue2;
+        symlink.foreground = c.dragonAqua;
+        pipe.foreground = c.dragonAsh;
+        block_device.foreground = c.dragonOrange;
+        char_device.foreground = c.dragonOrange;
+        socket.foreground = c.dragonAsh;
+        special.foreground = c.dragonPink;
+        executable.foreground = c.dragonGreen;
+        mount_point.foreground = c.dragonBlue2;
       };
       perms = {
-        user_read.foreground = "#c5c9c5";
-        user_write.foreground = "#c4b28a";
-        user_execute_file.foreground = "#87a987";
-        user_execute_other.foreground = "#87a987";
-        group_read.foreground = "#a6a69c";
-        group_write.foreground = "#c4b28a";
-        group_execute.foreground = "#87a987";
-        other_read.foreground = "#737c73";
-        other_write.foreground = "#c4b28a";
-        other_execute.foreground = "#87a987";
-        special_user_file.foreground = "#a292a3";
-        special_other.foreground = "#737c73";
-        attribute.foreground = "#737c73";
+        user_read.foreground = c.dragonWhite;
+        user_write.foreground = c.dragonYellow;
+        user_execute_file.foreground = c.dragonGreen;
+        user_execute_other.foreground = c.dragonGreen;
+        group_read.foreground = c.dragonGray;
+        group_write.foreground = c.dragonYellow;
+        group_execute.foreground = c.dragonGreen;
+        other_read.foreground = c.dragonAsh;
+        other_write.foreground = c.dragonYellow;
+        other_execute.foreground = c.dragonGreen;
+        special_user_file.foreground = c.dragonPink;
+        special_other.foreground = c.dragonAsh;
+        attribute.foreground = c.dragonAsh;
       };
       size = {
-        major.foreground = "#c5c9c5";
-        minor.foreground = "#8ea4a2";
-        number_byte.foreground = "#c5c9c5";
-        number_kilo.foreground = "#c5c9c5";
-        number_mega.foreground = "#8ba4b0";
-        number_giga.foreground = "#a292a3";
-        number_huge.foreground = "#a292a3";
-        unit_byte.foreground = "#737c73";
-        unit_kilo.foreground = "#8ba4b0";
-        unit_mega.foreground = "#8ba4b0";
-        unit_giga.foreground = "#a292a3";
-        unit_huge.foreground = "#c4b28a";
+        major.foreground = c.dragonWhite;
+        minor.foreground = c.dragonAqua;
+        number_byte.foreground = c.dragonWhite;
+        number_kilo.foreground = c.dragonWhite;
+        number_mega.foreground = c.dragonBlue2;
+        number_giga.foreground = c.dragonPink;
+        number_huge.foreground = c.dragonPink;
+        unit_byte.foreground = c.dragonAsh;
+        unit_kilo.foreground = c.dragonBlue2;
+        unit_mega.foreground = c.dragonBlue2;
+        unit_giga.foreground = c.dragonPink;
+        unit_huge.foreground = c.dragonYellow;
       };
       users = {
-        user_you.foreground = "#c5c9c5";
-        user_root.foreground = "#c4746e";
-        user_other.foreground = "#a292a3";
-        group_yours.foreground = "#a6a69c";
-        group_other.foreground = "#737c73";
-        group_root.foreground = "#c4746e";
+        user_you.foreground = c.dragonWhite;
+        user_root.foreground = c.dragonRed;
+        user_other.foreground = c.dragonPink;
+        group_yours.foreground = c.dragonGray;
+        group_other.foreground = c.dragonAsh;
+        group_root.foreground = c.dragonRed;
       };
       links = {
-        normal.foreground = "#8ea4a2";
-        multi_link_file.foreground = "#c4b28a";
+        normal.foreground = c.dragonAqua;
+        multi_link_file.foreground = c.dragonYellow;
       };
       git = {
-        new.foreground = "#87a987";
-        modified.foreground = "#c4b28a";
-        deleted.foreground = "#c4746e";
-        renamed.foreground = "#8ea4a2";
-        typechange.foreground = "#a292a3";
-        ignored.foreground = "#737c73";
-        conflicted.foreground = "#c4746e";
+        new.foreground = c.dragonGreen;
+        modified.foreground = c.dragonYellow;
+        deleted.foreground = c.dragonRed;
+        renamed.foreground = c.dragonAqua;
+        typechange.foreground = c.dragonPink;
+        ignored.foreground = c.dragonAsh;
+        conflicted.foreground = c.dragonRed;
       };
       git_repo = {
-        branch_main.foreground = "#c5c9c5";
-        branch_other.foreground = "#a292a3";
-        git_clean.foreground = "#87a987";
-        git_dirty.foreground = "#c4746e";
+        branch_main.foreground = c.dragonWhite;
+        branch_other.foreground = c.dragonPink;
+        git_clean.foreground = c.dragonGreen;
+        git_dirty.foreground = c.dragonRed;
       };
-      punctuation.foreground = "#625e5a";
-      date.foreground = "#8a9a7b";
-      inode.foreground = "#737c73";
-      header.foreground = "#a6a69c";
+      punctuation.foreground = c.dragonBlack6;
+      date.foreground = c.dragonGreen2;
+      inode.foreground = c.dragonAsh;
+      header.foreground = c.dragonGray;
     };
   };
 
@@ -301,27 +303,27 @@ in
 
       # keep syntax-highlighted text; only tint the background so
       # added/removed lines stay legible under Kanagawa Dragon.
-      minus-style = ''syntax "#43242b"'';
-      minus-non-emph-style = ''syntax "#43242b"'';
-      minus-emph-style = ''syntax "#663639"'';
-      minus-empty-line-marker-style = ''normal "#43242b"'';
+      minus-style = ''syntax "${c.diff.delete}"'';
+      minus-non-emph-style = ''syntax "${c.diff.delete}"'';
+      minus-emph-style = ''syntax "${c.diff.deleteEmph}"'';
+      minus-empty-line-marker-style = ''normal "${c.diff.delete}"'';
 
-      plus-style = ''syntax "#2b3328"'';
-      plus-non-emph-style = ''syntax "#2b3328"'';
-      plus-emph-style = ''syntax "#405d40"'';
-      plus-empty-line-marker-style = ''normal "#2b3328"'';
+      plus-style = ''syntax "${c.diff.add}"'';
+      plus-non-emph-style = ''syntax "${c.diff.add}"'';
+      plus-emph-style = ''syntax "${c.diff.addEmph}"'';
+      plus-empty-line-marker-style = ''normal "${c.diff.add}"'';
 
       # muted grays/blues for gutter + hunk headers (KD-native)
-      line-numbers-minus-style = "#c4746e";
-      line-numbers-plus-style = "#87a987";
-      line-numbers-zero-style = "#625e5a";
-      line-numbers-left-style = "#625e5a";
-      line-numbers-right-style = "#625e5a";
-      hunk-header-decoration-style = ''#625e5a box'';
-      hunk-header-file-style = "#8ba4b0";
-      hunk-header-line-number-style = "#c4b28a";
-      file-style = ''#c5c9c5 bold'';
-      file-decoration-style = ''#625e5a ul'';
+      line-numbers-minus-style = c.dragonRed;
+      line-numbers-plus-style = c.dragonGreen;
+      line-numbers-zero-style = c.dragonBlack6;
+      line-numbers-left-style = c.dragonBlack6;
+      line-numbers-right-style = c.dragonBlack6;
+      hunk-header-decoration-style = "${c.dragonBlack6} box";
+      hunk-header-file-style = c.dragonBlue2;
+      hunk-header-line-number-style = c.dragonYellow;
+      file-style = "${c.dragonWhite} bold";
+      file-decoration-style = "${c.dragonBlack6} ul";
     };
   };
 
@@ -420,22 +422,22 @@ in
       set -g renumber-windows on
       set -g set-clipboard on
 
-      # Kanagawa Dragon: dim border #393836 (dragonBlack5), active accent
-      # #c4746e (dragonRed); was colour238/colour166 (gruvbox era).
-      set -g pane-border-style "fg=#393836"
-      set -g pane-active-border-style "fg=#c4746e,bold"
+      # Kanagawa Dragon: dim border dragonBlack5, active accent dragonRed;
+      # was colour238/colour166 (gruvbox era).
+      set -g pane-border-style "fg=${c.dragonBlack5}"
+      set -g pane-active-border-style "fg=${c.dragonRed},bold"
       set -g pane-border-indicators arrows
 
       bind | split-window -h -c "#{pane_current_path}"
       bind - split-window -v -c "#{pane_current_path}"
       bind c new-window -c "#{pane_current_path}"
 
-      # Kanagawa Dragon: status bg #181616 (dragonBlack3), fg #a6a69c (dragonGray).
-      set -g status-style "bg=#181616,fg=#a6a69c"
-      set -g status-left "#[fg=#c4746e,bold] #S "
-      set -g status-right "#[fg=#a6a69c] %Y-%m-%d %H:%M "
+      # Kanagawa Dragon: status bg dragonBlack3, fg dragonGray.
+      set -g status-style "bg=${c.dragonBlack3},fg=${c.dragonGray}"
+      set -g status-left "#[fg=${c.dragonRed},bold] #S "
+      set -g status-right "#[fg=${c.dragonGray}] %Y-%m-%d %H:%M "
       set -g status-left-length 20
-      setw -g window-status-current-style "fg=#c4746e,bold"
+      setw -g window-status-current-style "fg=${c.dragonRed},bold"
       setw -g window-status-current-format " #I:#W "
       setw -g window-status-format " #I:#W "
     '';
