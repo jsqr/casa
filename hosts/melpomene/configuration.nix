@@ -19,27 +19,10 @@ in
 {
   imports = [
     ./hardware-configuration.nix
+    ../../modules/common.nix
   ];
 
   system.stateVersion = "25.11";
-
-  # ------------------------------------------------------------------
-  # Nix
-  # ------------------------------------------------------------------
-  nix.settings = {
-    experimental-features = [ "nix-command" "flakes" ];
-    auto-optimise-store = true;
-    trusted-users = [ "root" "jj" ];
-  };
-  nix.gc = {
-    automatic = true;
-    dates = "weekly";
-    options = "--delete-older-than 30d";
-  };
-  nix.optimise = {
-    automatic = true;
-    dates = [ "weekly" ];
-  };
 
   system.autoUpgrade = {
     enable = true;
@@ -97,67 +80,19 @@ in
     ];
   };
 
-  # ------------------------------------------------------------------
-  # Users — pin UID/GID to match the existing Debian system so files
-  # on /krater and /data keep their owner without a recursive chown.
-  # ------------------------------------------------------------------
-  users.mutableUsers = false;
-  users.users.jj = {
-    isNormalUser = true;
-    uid = 1000;
-    linger = true; # keep jj's systemd user manager running w/o login session
-    description = "Johnathan Jenkins";
-    extraGroups = [ "wheel" "docker" ];
-    shell = pkgs.zsh;
-    hashedPassword = "$y$j9T$nPiBiBD0ZfpoRilU3WmdT.$22dY3dwc4gsFtsdeYPYpVYsFLddHSzoozdbxsXtni48"; # mkpasswd -m yescrypt
-    openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMEx4/uo8PypcHv61UXAmevG4PQyl8nJFaMNCEpnTfgd jj@jsqr.org"
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIrNADL8XrXMblYMuWEMHkYl8hf+m7SwvN3t/G9DIXH6 ShellFish@iPad-14022026"
-    ];
-  };
-  users.groups.jj.gid = 1000;
-
-  # Required if shell = zsh is set on a user
-  programs.zsh.enable = true;
-
-  # ------------------------------------------------------------------
-  # nix-ld — install the runtime-loader ABI shim system-wide so the
-  # stub-ld at /lib64/ld-linux-x86-64.so.2 is replaced with a real
-  # nix-ld binary that reads NIX_LD / NIX_LD_LIBRARY_PATH from the
-  # environment. Library policy (which libs each project gets) lives in
-  # that project's flake.nix devShell, not here -- this enables the
-  # *mechanism*, not the *libs*.
-  # ------------------------------------------------------------------
-  programs.nix-ld.enable = true;
+  # `wheel` and the rest of the account come from modules/common.nix.
+  users.users.jj.extraGroups = [ "docker" ];
 
   # ------------------------------------------------------------------
   # Hardware
   # ------------------------------------------------------------------
-  hardware = {
-    cpu.intel.updateMicrocode = true;
-    enableRedistributableFirmware = true;
-    graphics.enable = true;
-    bluetooth = {
-      enable = true;
-      powerOnBoot = false;
-    };
-  };
+  # Intel microcode, redistributable firmware and bluetooth come from
+  # modules/common.nix.
+  hardware.graphics.enable = true;
 
   powerManagement = {
     enable = true;
     cpuFreqGovernor = "powersave";
-  };
-
-  time.timeZone = "America/New_York";
-  i18n.defaultLocale = "en_US.UTF-8";
-
-  # ------------------------------------------------------------------
-  # Security
-  # ------------------------------------------------------------------
-  security = {
-    polkit.enable = true;
-    sudo.wheelNeedsPassword = true;
-    rtkit.enable = true;
   };
 
   # ------------------------------------------------------------------
@@ -169,23 +104,6 @@ in
     enable = true;
     algorithm = "zstd";
     memoryPercent = 50;
-  };
-
-  # ------------------------------------------------------------------
-  # Services
-  # ------------------------------------------------------------------
-  services.openssh = {
-    enable = true;
-    settings = {
-      PermitRootLogin = "no";
-      PasswordAuthentication = false;
-      KbdInteractiveAuthentication = false;
-    };
-  };
-
-  services.tailscale = {
-    enable = true;
-    useRoutingFeatures = "client";
   };
 
   # ------------------------------------------------------------------
@@ -391,23 +309,7 @@ in
   # ------------------------------------------------------------------
   # Home Manager (system module) — reuses your existing per-user file.
   # ------------------------------------------------------------------
-  home-manager = {
-    useGlobalPkgs = true;
-    useUserPackages = true;
-    backupFileExtension = "hm-bak";
-    extraSpecialArgs = { inherit inputs; };
-    users.jj = import ../../home/melpomene.nix;
-  };
+  # Shared home-manager wiring lives in modules/common.nix.
+  home-manager.users.jj = import ../../home/melpomene.nix;
 
-  # ------------------------------------------------------------------
-  # System packages (kept lean — most tools come via Home Manager)
-  # ------------------------------------------------------------------
-  # nano is enabled by default via `programs.nano.enable`, so a fallback
-  # editor is always available without listing one here.
-  environment.systemPackages = with pkgs; [
-    curl wget git
-    htop btop lsof strace ncdu
-    btrfs-progs compsize
-    pciutils usbutils
-  ];
 }

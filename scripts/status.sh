@@ -1,16 +1,17 @@
 #!/usr/bin/env bash
-# ~/bin/status — one-screen upgrade/system status for melpomene.
+# ~/bin/status — one-screen upgrade/system status for a NixOS host.
 # Read-only; every source here is readable, so no sudo needed.
 set -u
 
 FLAKE="$HOME/jsqr/casa"
+HOST="$(hostname -s)"
 
 row() { printf '%-18s %s\n' "$1" "$2"; }
 
 current="$(readlink /run/current-system)"
 booted="$(readlink /run/booted-system)"
-cur_ver="${current##*-nixos-system-melpomene-}"
-boot_ver="${booted##*-nixos-system-melpomene-}"
+cur_ver="${current##*-nixos-system-$HOST-}"
+boot_ver="${booted##*-nixos-system-$HOST-}"
 
 gen="$(readlink /nix/var/nix/profiles/system | sed -E 's/^system-([0-9]+)-link$/\1/')"
 # stat without -L: the link's own mtime is the switch time; the store
@@ -25,11 +26,18 @@ pin="$(jq -r '.nodes[.nodes.root.inputs.nixpkgs]
   "$FLAKE/flake.lock")"
 lock_commit="$(git -C "$FLAKE" log -1 --format='%h "%s"  (%as)' -- flake.lock)"
 
-upgrade_result="$(systemctl show nixos-upgrade.service -p Result --value)"
-upgrade_time="$(systemctl show nixos-upgrade.service -p ExecMainExitTimestamp --value)"
-next_run="$(systemctl show nixos-upgrade.timer -p NextElapseUSecRealtime --value)"
+# system.autoUpgrade runs on melpomene only.
+if systemctl list-unit-files nixos-upgrade.timer &>/dev/null \
+   && [[ -n "$(systemctl list-unit-files --no-legend nixos-upgrade.timer 2>/dev/null)" ]]; then
+  has_autoupgrade=1
+  upgrade_result="$(systemctl show nixos-upgrade.service -p Result --value)"
+  upgrade_time="$(systemctl show nixos-upgrade.service -p ExecMainExitTimestamp --value)"
+  next_run="$(systemctl show nixos-upgrade.timer -p NextElapseUSecRealtime --value)"
+else
+  has_autoupgrade=0
+fi
 
-echo "melpomene · $(date '+%Y-%m-%d %H:%M')"
+echo "$HOST · $(date '+%Y-%m-%d %H:%M')"
 printf '─%.0s' {1..60}; echo
 
 row "System (current)" "$cur_ver  (gen $gen, built $gen_date)"
@@ -45,10 +53,14 @@ else
 fi
 row "nixpkgs pin" "$pin"
 row "flake.lock commit" "$lock_commit"
-if [[ "$upgrade_result" == "success" ]]; then
-  row "Auto-upgrade" "✓ ok at $upgrade_time"
+if [[ "$has_autoupgrade" == 1 ]]; then
+  if [[ "$upgrade_result" == "success" ]]; then
+    row "Auto-upgrade" "✓ ok at $upgrade_time"
+  else
+    row "Auto-upgrade" "✗ $upgrade_result at $upgrade_time"
+  fi
+  row "Next run" "$next_run"
 else
-  row "Auto-upgrade" "✗ $upgrade_result at $upgrade_time"
+  row "Auto-upgrade" "not enabled — update by hand (~/bin/update)"
 fi
-row "Next run" "$next_run"
 row "Disk /" "$(df -h --output=used,size,pcent / | awk 'NR==2 {print $1" used / "$2"  ("$3")"}')"
