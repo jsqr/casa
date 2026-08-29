@@ -35,3 +35,6 @@ auto-save-list/
 .zig-cache/
 zig-cache/
 zig-out/
+
+# Scratch / planning notes
+.scratch/
