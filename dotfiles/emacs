@@ -61,6 +61,8 @@
 (setq auto-save-default nil)
 (setq ring-bell-function 'ignore)
 (global-display-line-numbers-mode 1)
+;; Per-window buffer tabs
+(global-tab-line-mode 1)
 (setq tab-width 4)
 (setq indent-tabs-mode nil)
 (electric-pair-mode 1)
@@ -404,6 +406,20 @@
   (setq org-fontify-done-headline t
         org-fontify-quote-and-verse-blocks t
         org-fontify-whole-heading-line t))
+
+;; kanagawa-themes sets only :background on tab-line, leaving the default
+;; :foreground "black" and :inherit variable-pitch, and defines none of the
+;; per-tab faces. Dragon palette values, from kanagawa-themes.el.
+(dolist (spec '((tab-line              "#0d0c0c" "#7a8382")
+                (tab-line-tab          "#181616" "#c5c9c5")
+                (tab-line-tab-current  "#181616" "#c5c9c5")
+                (tab-line-tab-inactive "#0d0c0c" "#7a8382")
+                (tab-line-highlight    "#282727" "#c5c9c5")))
+  (set-face-attribute (nth 0 spec) nil
+                      :background (nth 1 spec)
+                      :foreground (nth 2 spec)
+                      :inherit nil
+                      :box nil))
 
 ;; Make inlay hints easier to see
 (with-eval-after-load 'eglot
