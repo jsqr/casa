@@ -424,7 +424,7 @@
 ;; Make inlay hints easier to see
 (with-eval-after-load 'eglot
   (set-face-attribute 'eglot-inlay-hint-face nil
-		      :foreground "#727072"))
+		      :foreground "#7a8382"))
 
 ;; FIM code completion
 (use-package minuet
