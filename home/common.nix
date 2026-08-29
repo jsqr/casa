@@ -3,6 +3,23 @@
 let
   c = import ../lib/kanagawa-dragon.nix;
 
+  # bat reads a tmTheme, which has no way to reference a palette. The template
+  # in dotfiles/bat carries @name@ placeholders for the top-level colours in
+  # lib/kanagawa-dragon.nix; fill them here so bat tracks the same values as
+  # everything else.
+  batTheme =
+    let
+      colours = lib.filterAttrs (_: v: lib.isString v) c;
+      filled = builtins.replaceStrings
+        (map (n: "@${n}@") (builtins.attrNames colours))
+        (builtins.attrValues colours)
+        (builtins.readFile ../dotfiles/bat/kanagawa-dragon.tmTheme.in);
+      unfilled = lib.filter (l: builtins.match ".*@[a-zA-Z0-9]+@.*" l != null)
+        (lib.splitString "\n" filled);
+    in
+    lib.throwIf (unfilled != [ ])
+      "bat theme: unfilled placeholders in ${toString unfilled}" filled;
+
   unstable = import inputs.nixpkgs-unstable { inherit (pkgs.stdenv.hostPlatform) system; config.allowUnfree = true; };
 
   # Tree-sitter grammars for the *-ts-mode major modes in dotfiles/emacs.
@@ -115,10 +132,7 @@ in
       theme = "Kanagawa Dragon";
     };
     # delta and bat read the same theme DB.
-    themes."Kanagawa Dragon" = {
-      src = ../dotfiles/bat;
-      file = "Kanagawa Dragon.tmTheme";
-    };
+    themes."Kanagawa Dragon" = batTheme;
   };
 
   programs.eza = {
