@@ -34,6 +34,19 @@ rec {
   dragonTeal = "#949fb5";
   dragonYellow = "#c4b28a";
 
+  # From the shared palette, not the dragon group. The dragon theme's terminal
+  # and diff colours draw on these. Upstream writes them uppercase; lowercased
+  # here to match the dragon* names above and the hex the tools emit.
+  oldWhite = "#c8c093";
+  waveRed = "#e46876";
+  winterRed = "#43242b";
+  winterGreen = "#2b3328";
+  waveAqua2 = "#7aa89f";
+  waveBlue2 = "#2d4f67";
+  carpYellow = "#e6c384";
+  springBlue = "#7fb4ca";
+  springViolet1 = "#938aa9";
+
   # ---- aliases ------------------------------------------------------
   # Chosen to match how home/common.nix already uses these values.
   bg = dragonBlack3; # window / bar background
@@ -69,5 +82,50 @@ rec {
     brightMagenta = dragonPink;
     brightCyan = dragonAqua;
     brightWhite = dragonWhite;
+  };
+
+  # ---- diff backgrounds ----------------------------------------------
+  # winterRed and winterGreen are upstream; the emph pair is local, each a
+  # lightened version of the block colour, for delta's *-emph-style.
+  diff = {
+    delete = winterRed;
+    deleteEmph = "#663639";
+    add = winterGreen;
+    addEmph = "#405d40";
+  };
+
+  # ---- terminal palette ---------------------------------------------
+  # The dragon theme's `term` table from kanagawa.nvim's
+  # lua/kanagawa/themes.lua, in upstream's order, plus the selection pair
+  # its extras/ use. This is the reference for any terminal emulator here.
+  #
+  # Distinct from `ansi` above, which is the UI-accent set home/common.nix
+  # uses: that one collapses six brights onto their regulars, which suits a
+  # bar but loses bold/bright in a terminal.
+  term = {
+    black = dragonBlack0;
+    red = dragonRed;
+    green = dragonGreen2;
+    yellow = dragonYellow;
+    blue = dragonBlue2;
+    magenta = dragonPink;
+    cyan = dragonAqua;
+    white = oldWhite;
+
+    brightBlack = dragonGray;
+    brightRed = waveRed;
+    brightGreen = dragonGreen;
+    brightYellow = carpYellow;
+    brightBlue = springBlue;
+    brightMagenta = springViolet1;
+    brightCyan = waveAqua2;
+    brightWhite = dragonWhite;
+
+    # Indices 16 and 17; upstream calls them extended colours.
+    extended0 = dragonOrange;
+    extended1 = dragonOrange2;
+
+    selectionFg = oldWhite;
+    selectionBg = waveBlue2;
   };
 }

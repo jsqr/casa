@@ -59,6 +59,13 @@ with pkgs; [
   rustup
   zig
 ] ++ [
+  # test_stdio_server_uses_the_same_json_rpc_lifecycle fails on darwin with
+  # IndexError: list index out of range.
+  (unstable.mistral-vibe.overridePythonAttrs (old: {
+    disabledTests = old.disabledTests ++ [
+      "test_stdio_server_uses_the_same_json_rpc_lifecycle"
+    ];
+  }))
   unstable.pi-coding-agent
   unstable.pyrefly
 ]

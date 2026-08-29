@@ -81,7 +81,8 @@ in
 
     binds {
         Mod+Shift+Slash { show-hotkey-overlay; }
-        Mod+T { spawn "ghostty"; }
+        Mod+T { spawn "footclient"; }
+        Mod+Shift+T { spawn "ghostty"; }
 
         Mod+Q repeat=false { close-window; }
         Mod+O repeat=false { toggle-overview; }
