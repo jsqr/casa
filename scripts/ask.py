@@ -3,7 +3,7 @@
 # requires-python = ">=3.12"
 # dependencies = [
 #   "typer>=0.15.0",
-#   "pydantic-ai>=0.0.20",
+#   "pydantic-ai-slim[mistral]>=0.0.20",
 # ]
 # ///
 
