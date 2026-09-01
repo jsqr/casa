@@ -59,7 +59,7 @@ in
     }
 
     layout {
-        gaps 8
+        gaps 12
         center-focused-column "never"
         ${focusRing}
         default-column-width { proportion 0.5; }
@@ -71,6 +71,13 @@ in
     }
 
     prefer-no-csd
+
+    // Rounded corners are per-window in niri, not a layout setting.
+    // clip-to-geometry makes the client's own square corners get cut.
+    window-rule {
+        geometry-corner-radius 8
+        clip-to-geometry true
+    }
 
     screenshot-path "~/pictures/screenshots/screenshot-%Y-%m-%d-%H-%M-%S.png"
 
