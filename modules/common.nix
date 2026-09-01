@@ -38,6 +38,7 @@
     hashedPassword = "$y$j9T$nPiBiBD0ZfpoRilU3WmdT.$22dY3dwc4gsFtsdeYPYpVYsFLddHSzoozdbxsXtni48"; # mkpasswd -m yescrypt
     openssh.authorizedKeys.keys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMEx4/uo8PypcHv61UXAmevG4PQyl8nJFaMNCEpnTfgd jj@jsqr.org"
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPb1qa4XbT57XCJeCKLrJ/jONoa0n8JECayRt7Ci/Di+ jj@melpomene"
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIrNADL8XrXMblYMuWEMHkYl8hf+m7SwvN3t/G9DIXH6 ShellFish@iPad-14022026"
     ];
   };
