@@ -62,7 +62,7 @@ in
     server.enable = true;
     settings = {
       main = {
-        font = "JuliaMono:size=11:fontfeatures=ss01:fontfeatures=zero, FiraCode Nerd Font Mono:size=11";
+        font = "JuliaMono:size=9:fontfeatures=ss01:fontfeatures=zero, FiraCode Nerd Font Mono:size=9";
         term = "xterm-256color";
       };
 
@@ -70,7 +70,7 @@ in
 
       # kanagawa dragon, from lib/kanagawa-dragon.nix. Mirrors upstream's
       # extras/foot/kanagawa-dragon.ini.
-      colors = {
+      colors-dark = {
         background = hex c.bg;
         foreground = hex c.fg;
 
