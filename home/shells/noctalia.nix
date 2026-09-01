@@ -73,11 +73,10 @@ let
     };
   };
 
-  # UNVERIFIED: the invocation form is taken from v4, which inherited it from
-  # Quickshell (`noctalia-shell ipc call <target> <function>`). v5 has its own
-  # client in src/ipc/cli.cpp. Check `noctalia ipc --help` on the machine.
-  # The target and function names below are confirmed.
-  ipc = target: fn: ''spawn "noctalia" "ipc" "call" "${target}" "${fn}";'';
+  # v5 replaced v4's `ipc call <target> <function>` with flat `msg <verb>`
+  # subcommands; `noctalia msg --help` lists them. Panel ids come from
+  # `noctalia msg panel-toggle` with an unknown id, which prints the valid set.
+  msg = args: ''spawn "noctalia" "msg" ${lib.concatMapStringsSep " " (a: ''"${a}"'') args};'';
 in
 lib.mkIf (cfg.shell == "noctalia") {
 
@@ -122,30 +121,40 @@ lib.mkIf (cfg.shell == "noctalia") {
     include "noctalia.kdl"
   '';
 
+  # niri refuses to start on an unresolvable include, and Noctalia only writes
+  # noctalia.kdl once it is running -- which needs niri. Create an empty file
+  # if it is absent so the first login can get far enough to break the cycle.
+  # Not home.file: Noctalia must be able to write it.
+  home.activation.noctaliaKdlStub = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    d="${config.xdg.configHome}/niri"
+    run mkdir -p "$d"
+    [ -e "$d/noctalia.kdl" ] || run touch "$d/noctalia.kdl"
+  '';
+
   # Noctalia's included KDL supplies focus-ring.
   kalliope.niri.focusRing = false;
 
   # Media and brightness keys go through Noctalia rather than wpctl,
   # brightnessctl and playerctl, so its OSD overlays appear.
   kalliope.niri.binds = ''
-    Mod+D { ${ipc "launcher" "toggle"} }
-    Mod+Shift+C { ${ipc "launcher" "clipboard"} }
-    Mod+Alt+L { ${ipc "lockScreen" "lock"} }
-    Mod+Escape { ${ipc "sessionMenu" "toggle"} }
-    Mod+N { ${ipc "notifications" "toggleHistory"} }
-    Mod+Comma { ${ipc "settings" "toggle"} }
-    Mod+Ctrl+Space { ${ipc "controlCenter" "toggle"} }
+    Mod+D { ${msg [ "panel-toggle" "launcher" ]} }
+    Mod+Shift+C { ${msg [ "panel-toggle" "clipboard" ]} }
+    Mod+Alt+L { ${msg [ "session" "lock" ]} }
+    Mod+Escape { ${msg [ "panel-toggle" "session" ]} }
+    Mod+N { ${msg [ "panel-toggle" "control-center" "notifications" ]} }
+    Mod+Comma { ${msg [ "settings-toggle" ]} }
+    Mod+Ctrl+Space { ${msg [ "panel-toggle" "control-center" ]} }
 
-    XF86AudioRaiseVolume allow-when-locked=true { ${ipc "volume" "increase"} }
-    XF86AudioLowerVolume allow-when-locked=true { ${ipc "volume" "decrease"} }
-    XF86AudioMute        allow-when-locked=true { ${ipc "volume" "muteOutput"} }
-    XF86AudioMicMute     allow-when-locked=true { ${ipc "volume" "muteInput"} }
+    XF86AudioRaiseVolume allow-when-locked=true { ${msg [ "volume-up" ]} }
+    XF86AudioLowerVolume allow-when-locked=true { ${msg [ "volume-down" ]} }
+    XF86AudioMute        allow-when-locked=true { ${msg [ "volume-mute" ]} }
+    XF86AudioMicMute     allow-when-locked=true { ${msg [ "mic-mute" ]} }
 
-    XF86MonBrightnessUp   allow-when-locked=true { ${ipc "brightness" "increase"} }
-    XF86MonBrightnessDown allow-when-locked=true { ${ipc "brightness" "decrease"} }
+    XF86MonBrightnessUp   allow-when-locked=true { ${msg [ "brightness-up" ]} }
+    XF86MonBrightnessDown allow-when-locked=true { ${msg [ "brightness-down" ]} }
 
-    XF86AudioPlay allow-when-locked=true { ${ipc "media" "playPause"} }
-    XF86AudioNext allow-when-locked=true { ${ipc "media" "next"} }
-    XF86AudioPrev allow-when-locked=true { ${ipc "media" "previous"} }
+    XF86AudioPlay allow-when-locked=true { ${msg [ "media" "toggle" ]} }
+    XF86AudioNext allow-when-locked=true { ${msg [ "media" "next" ]} }
+    XF86AudioPrev allow-when-locked=true { ${msg [ "media" "previous" ]} }
   '';
 }
