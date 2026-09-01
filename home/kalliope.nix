@@ -8,6 +8,8 @@ let
   c = import ../lib/kanagawa-dragon.nix;
   # foot wants RRGGBB with no prefix; the palette stores #RRGGBB.
   hex = lib.removePrefix "#";
+  # programs.firefox.configPath is relative to $HOME.
+  xdgConfigRel = lib.removePrefix "${config.home.homeDirectory}/" config.xdg.configHome;
 in
 {
   imports = [
@@ -37,8 +39,32 @@ in
     pkgs.wl-clipboard
     pkgs.brightnessctl
     pkgs.playerctl
-    pkgs.firefox
+    pkgs.proton-pass
   ];
+
+  # From programs.firefox, not home.packages, so the Proton Pass extension can
+  # be declared. Only policies are set; they go in the wrapper's
+  # distribution/policies.json. No profiles block, so Firefox keeps owning the
+  # profile.
+  #
+  # configPath: home-manager derives its default from home.stateVersion, 24.11
+  # here (home/common.nix), giving the pre-26.05 ~/.mozilla/firefox. Firefox 154
+  # moved to XDG on its own, so the profile is under ~/.config.
+  programs.firefox = {
+    enable = true;
+    configPath = "${xdgConfigRel}/mozilla/firefox";
+
+    # normal_installed rather than force_installed: the latter also blocks
+    # disabling the extension in about:addons. Installed from AMO rather than
+    # pinned in flake.lock so it tracks upstream. Key is the AMO GUID.
+    policies.ExtensionSettings = {
+      "78272b6fa58f4a1abaac99321d503a20@proton.me" = {
+        installation_mode = "normal_installed";
+        install_url =
+          "https://addons.mozilla.org/firefox/downloads/latest/proton-pass/latest.xpi";
+      };
+    };
+  };
 
   # thalia sets package = null because ghostty comes from Homebrew there.
   # Settings otherwise match.
