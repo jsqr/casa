@@ -35,7 +35,9 @@ in
     ${cfg.extraConfig}
     input {
         keyboard {
-            xkb { }
+            xkb {
+                options "ctrl:nocaps"
+            }
             numlock
         }
         touchpad {
