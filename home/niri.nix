@@ -25,6 +25,8 @@ in
 {
   home.packages = [ pkgs.xwayland-satellite ];
 
+  kalliope.niri.startup = [ [ "proton-pass" ] ];
+
   # KDL inside a Nix '' string: a literal ${...} must be written ''${...}.
   # The wpctl binds contain @DEFAULT_AUDIO_SINK@ and no ${}, so they need no
   # escaping. Anything added later using shell variable expansion does.
