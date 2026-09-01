@@ -227,7 +227,6 @@ in
     extraPackages = epkgs: with epkgs; [
       envrc
       denote
-      org-appear
       diminish
       projectile
       dirvish
