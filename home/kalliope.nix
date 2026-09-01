@@ -30,16 +30,18 @@ in
   # No targets.genericLinux.enable; melpomene sets it, but it has no effect
   # under the home-manager NixOS module.
 
-  # julia-mono from unstable: nixos-26.05 is still on 0.062, as on thalia.
   home.packages = [
     unstable.claude-code
     unstable.julia-mono
+    unstable.darktable
+    unstable.gimp
     pkgs.grim
     pkgs.slurp
     pkgs.wl-clipboard
     pkgs.brightnessctl
     pkgs.playerctl
     pkgs.proton-pass
+    pkgs.qobuz-player
   ];
 
   # From programs.firefox, not home.packages, so the Proton Pass extension can
@@ -128,6 +130,18 @@ in
       # sequence = key combination, in that order.
       text-bindings."\\x1b\\x0d" = "Shift+Return";
     };
+  };
+
+  # The TUI (as of v. 0.9) seems to be re-encoding the album cover into
+  # terminal graphics on every redraw, on the same task that reads the keyboard.
+  programs.zsh.shellAliases.qobuz = "qobuz-player open --disable-tui-album-cover";
+
+  # pgtk, not the default X11 build, for Wayland/Niri
+  programs.emacs.package = pkgs.emacs-pgtk;
+
+  gtk = {
+    enable = true;
+    colorScheme = "dark";
   };
 
   programs.gh = {

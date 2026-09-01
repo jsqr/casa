@@ -56,6 +56,9 @@
 ;; UI tweaks
 (menu-bar-mode -1)
 (tool-bar-mode -1)
+;; Redundant next to display-line-numbers-mode, and the GTK-drawn bar does
+;; not follow the Emacs theme.
+(scroll-bar-mode -1)
 (setq inhibit-startup-message t)
 (setq make-backup-files nil)
 (setq auto-save-default nil)
@@ -374,10 +377,15 @@
 (defun jj/set-gui-font (&optional frame)
   (when (and (display-graphic-p frame)
              (member "JuliaMono" (font-family-list frame)))
+    ;; :height is tenths of a point, resolved against the toolkit's DPI:
+    ;; macOS uses 72, GTK 96. The same value is a third larger under pgtk,
+    ;; so pick per platform to land on a 13px cell on both.
     (set-face-attribute 'default frame
-                        :family "JuliaMono" :height 130)
+                        :family "JuliaMono"
+                        :height (if (eq system-type 'darwin) 130 98))
     ;; Changing the font preserves pixel size, which would otherwise shift
-    ;; the column/row count; re-assert the 120x48 grid in the new font.
+    ;; the column/row count; re-assert the 110x50 grid in the new font.
+    ;; Inert under a tiling compositor, which sets the window size itself.
     (set-frame-size frame 110 50)))
 ;; Apply to the current frame (standalone Emacs.app) and to every new
 ;; frame the daemon creates for emacsclient -c.
