@@ -42,6 +42,8 @@ in
     pkgs.playerctl
     pkgs.proton-pass
     pkgs.qobuz-player
+    # GNOME Document Scanner; talks to the M426fdw over eSCL via sane-airscan.
+    pkgs.simple-scan
   ];
 
   # From programs.firefox, not home.packages, so the Proton Pass extension can

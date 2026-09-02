@@ -1,4 +1,4 @@
-# Graphical session: niri, greetd, audio, fonts, portals, power.
+# Graphical session: niri, greetd, audio, fonts, portals, power, printing.
 # Imported by graphical hosts only.
 { config, pkgs, lib, ... }:
 
@@ -78,6 +78,64 @@
   services.power-profiles-daemon.enable = true;
   services.thermald.enable = true;
   services.upower.enable = true;
+
+  # ------------------------------------------------------------------
+  # Printing and scanning — HP LaserJet MFP M426fdw on the LAN.
+  #
+  # The queue is driverless. The printer reports ipp-features-supported =
+  # airprint-1.4 and lists application/pdf in document-format-supported, so
+  # CUPS forwards PDF untouched.
+  #
+  # avahi resolves but does not publish. kalliope roams, so it answers no
+  # mDNS queries of its own; nssmdns4 is only what makes NPI2DA1C3.local
+  # resolve, for the queue below and for sane-airscan's discovery.
+  # ------------------------------------------------------------------
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true;
+  };
+
+  services.printing = {
+    enable = true;
+    # browsed.enable defaults to services.avahi.enable. cupsd does its own
+    # DNS-SD browsing, so browsed would only add a second, auto-named queue
+    # beside the declared one.
+    browsed.enable = false;
+  };
+
+  # lpadmin -m everywhere fetches the printer's IPP attributes, so the first
+  # run of ensure-printers must happen on the printer's LAN. The queue then
+  # persists in /var/lib/cups. SuccessExitStatus keeps later rebuilds away
+  # from home — where the query cannot succeed and does not need to — from
+  # reporting a failed unit.
+  hardware.printers = {
+    ensureDefaultPrinter = "laserjet";
+    ensurePrinters = [{
+      name = "laserjet";
+      description = "HP LaserJet MFP M426fdw";
+      deviceUri = "ipp://NPI2DA1C3.local:631/ipp/print";
+      model = "everywhere";
+      # The duplexer is installed and the printer is mono-only.
+      ppdOptions = {
+        PageSize = "Letter";
+        Duplex = "DuplexNoTumble";
+      };
+    }];
+  };
+  systemd.services.ensure-printers.serviceConfig.SuccessExitStatus = "1";
+
+  # Scanning over eSCL, which the printer serves at /eSCL. sane's own escl
+  # backend is disabled so airscan does not list the scanner twice.
+  hardware.sane = {
+    enable = true;
+    extraBackends = [ pkgs.sane-airscan ];
+    disabledDefaultBackends = [ "escl" ];
+  };
+
+  # sane grants access through the scanner group, or lp when the device is
+  # also a printer. Neither is needed for a network scanner, but a USB one
+  # would want them.
+  users.users.jj.extraGroups = [ "scanner" "lp" ];
 
   environment.systemPackages = with pkgs; [
     brightnessctl
