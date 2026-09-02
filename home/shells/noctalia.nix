@@ -104,6 +104,37 @@ lib.mkIf (cfg.shell == "noctalia") {
         custom_palette = "kanagawa-dragon";
       };
       shell.font = "JuliaMono";
+
+      # Bar widget placement. start/center/end are the three bar zones; each
+      # array replaces the built-in default wholesale, so all three are
+      # spelled out even where they match upstream.
+      #
+      # `media` (now playing) moves to the left zone, after `workspaces`,
+      # rather than the head of `end` where it competed with ten status
+      # widgets for space.
+      bar.default = {
+        start = [ "launcher" "wallpaper" "workspaces" "media" ];
+        center = [ "clock" ];
+        end = [
+          "tray"
+          "notifications"
+          "clipboard"
+          "network"
+          "bluetooth"
+          "volume"
+          "brightness"
+          "battery"
+          "control-center"
+          "session"
+        ];
+      };
+
+      # Default max_length 220 is the cramped part; the left zone has room.
+      # title_scroll accepts "none", "on_hover" or "always".
+      widget.media = {
+        max_length = 320.0;
+        title_scroll = "on_hover";
+      };
     };
   };
 
