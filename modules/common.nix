@@ -94,12 +94,10 @@
     };
   };
 
-  # --ssh goes in extraSetFlags: extraUpFlags only applies when authKeyFile is
-  # set. Access is governed by the tailnet SSH policy, not authorizedKeys.
   services.tailscale = {
     enable = true;
     useRoutingFeatures = "client";
-    extraSetFlags = [ "--ssh" ];
+    extraSetFlags = [ "--ssh=false" ];
   };
 
   # ------------------------------------------------------------------
