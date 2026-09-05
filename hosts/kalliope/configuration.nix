@@ -1,5 +1,10 @@
 { config, pkgs, lib, inputs, ... }:
 
+let
+  # Literal system, not pkgs.stdenv.hostPlatform: the overlay below feeds
+  # pkgs, so reading it back here would recurse.
+  unstable = import inputs.nixpkgs-unstable { system = "x86_64-linux"; };
+in
 {
   imports = [
     ./hardware-configuration.nix
@@ -23,16 +28,7 @@
     initrd.systemd.enable = true;
     supportedFilesystems = [ "btrfs" ];
 
-    # Set explicitly for Panther Lake. nixos-hardware's Framework module
-    # forces linuxPackages_latest only when the default kernel is older than
-    # 6.17, and nixpkgs 26.05 defaults to 6.18, so importing that module
-    # alone leaves this host on 6.18. 6.18 meets the Xe3 minimum, but 7.1
-    # enables FRED by default and 7.2 improves Xe3 performance on Core Ultra
-    # Series 3.
-    #
-    # linuxPackages_latest is an alias, so a flake update can change the
-    # kernel. Pinning linuxPackages_7_2 instead fails to evaluate once 7.2 is
-    # removed at EOL. Roll back by booting the previous generation.
+    # kernels 7.1, 7.2 improve performance under Panther Lake (kalliope)
     kernelPackages = pkgs.linuxPackages_latest;
   };
 
@@ -83,6 +79,58 @@
   systemd.tmpfiles.rules = [
     "d /data/18 0700 postgres postgres -"
   ];
+
+  # ------------------------------------------------------------------
+  # llama.cpp — same router setup as melpomene, but on the Arc B390 iGPU
+  # and localhost-only. packages.nix ships llama-cpp to every host, so the
+  # overlay redirects that one attribute rather than adding a second copy:
+  # it gives the service, llama-cli and llama-bench the same Vulkan build.
+  # ------------------------------------------------------------------
+  nixpkgs.overlays = [ (_: _: { llama-cpp = unstable.llama-cpp-vulkan; }) ];
+
+  services.llama-cpp = {
+    enable = true;
+
+    # Router LRU cap, as on melpomene. No -ngl: --fit sizes offload to the
+    # Vulkan heap, which is shared system RAM here.
+    extraFlags = [ "--models-max" "2" ];
+
+    modelsPreset = {
+      "embeddinggemma-300m" = {
+        hf-repo = "ggml-org/embeddinggemma-300m-qat-q8_0-GGUF";
+        hf-file = "embeddinggemma-300m-qat-Q8_0.gguf";
+        alias = "google/embeddinggemma-300m";
+        embedding = "true";
+        ctx-size = "2048";
+        load-on-startup = "true";
+      };
+
+      # QAT weights, so Q4 costs little quality. E4B is the fast tier:
+      # ~4.2 GB against the 12B's 6.7 GB, and the E-series reads fewer
+      # bytes per token still. Swap in E2B-it-qat (2.6 GB) to go faster.
+      "gemma-4-E4B" = {
+        hf-repo = "unsloth/gemma-4-E4B-it-qat-GGUF";
+        hf-file = "gemma-4-E4B-it-qat-UD-Q4_K_XL.gguf";
+        alias = "unsloth/gemma-4-E4B-it";
+        jinja = "on";
+        ctx-size = "8192";
+        sleep-idle-seconds = "600";
+      };
+
+      "gemma-4-12B" = {
+        hf-repo = "unsloth/gemma-4-12B-it-qat-GGUF";
+        hf-file = "gemma-4-12B-it-qat-UD-Q4_K_XL.gguf";
+        alias = "unsloth/gemma-4-12B-it";
+        jinja = "on";
+        ctx-size = "8192";
+        sleep-idle-seconds = "600";
+      };
+    };
+  };
+
+  # The unit runs with HOME=/, so mesa gives up on its pipeline cache and
+  # recompiles shaders on every model load. CacheDirectory= is writable.
+  systemd.services.llama-cpp.environment.MESA_SHADER_CACHE_DIR = "/var/cache/llama-cpp";
 
   home-manager.users.jj = import ../../home/kalliope.nix;
 }
