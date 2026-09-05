@@ -182,10 +182,16 @@ in
   services.llama-cpp = {
     enable = true;
 
-    # Router LRU cap: at most 2 of the 3 presets resident at once
-    extraFlags = [ "--models-max" "2" ];
+    # Router LRU cap. 4 of the 5 presets, so ask --local (gemma-4-E4B)
+    # cannot evict the embedding model this box serves. The chat models
+    # release their weights on sleep-idle-seconds, so this is not 4
+    # models' worth of resident RAM.
+    extraFlags = [ "--models-max" "4" ];
 
-    modelsPreset = {
+    # The shared pair (E4B for ask --local, embeddinggemma for new
+    # projects) is in lib/llama-presets.nix. The three below are this
+    # host's own and unchanged.
+    modelsPreset = (import ../../lib/llama-presets.nix) // {
       "Qwen3-Embedding-8B" = {
         hf-repo = "Qwen/Qwen3-Embedding-8B-GGUF";
         hf-file = "Qwen3-Embedding-8B-Q5_K_M.gguf";

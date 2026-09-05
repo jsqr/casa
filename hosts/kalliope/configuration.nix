@@ -95,28 +95,9 @@ in
     # Vulkan heap, which is shared system RAM here.
     extraFlags = [ "--models-max" "2" ];
 
-    modelsPreset = {
-      "embeddinggemma-300m" = {
-        hf-repo = "ggml-org/embeddinggemma-300m-qat-q8_0-GGUF";
-        hf-file = "embeddinggemma-300m-qat-Q8_0.gguf";
-        alias = "google/embeddinggemma-300m";
-        embedding = "true";
-        ctx-size = "2048";
-        load-on-startup = "true";
-      };
-
-      # QAT weights, so Q4 costs little quality. E4B is the fast tier:
-      # ~4.2 GB against the 12B's 6.7 GB, and the E-series reads fewer
-      # bytes per token still. Swap in E2B-it-qat (2.6 GB) to go faster.
-      "gemma-4-E4B" = {
-        hf-repo = "unsloth/gemma-4-E4B-it-qat-GGUF";
-        hf-file = "gemma-4-E4B-it-qat-UD-Q4_K_XL.gguf";
-        alias = "unsloth/gemma-4-E4B-it";
-        jinja = "on";
-        ctx-size = "8192";
-        sleep-idle-seconds = "600";
-      };
-
+    # Preset keys are long CLI flags minus the dashes. The shared pair
+    # (E4B, embeddinggemma) is in lib/llama-presets.nix; the 12B is local.
+    modelsPreset = (import ../../lib/llama-presets.nix) // {
       "gemma-4-12B" = {
         hf-repo = "unsloth/gemma-4-12B-it-qat-GGUF";
         hf-file = "gemma-4-12B-it-qat-UD-Q4_K_XL.gguf";

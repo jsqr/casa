@@ -2,6 +2,11 @@
 
 let
   unstable = import inputs.nixpkgs-unstable { inherit (pkgs.stdenv.hostPlatform) system; config.allowUnfree = true; };
+
+  # The NixOS hosts get this INI from services.llama-cpp; there is no
+  # home-manager module, so render it with the same generator.
+  llamaPresets = pkgs.writeText "llama-models.ini"
+    (lib.generators.toINI { } (import ../lib/llama-presets.nix));
 in
 {
   imports = [ ./common.nix ];
@@ -13,6 +18,32 @@ in
   home.packages = [ unstable.claude-code pkgs.postgresql_18 unstable.julia-mono ];
 
   programs.gh.enable = true;
+
+  # llama-server in router mode, matching the two NixOS hosts: same model
+  # ids at 127.0.0.1:8080, so scripts/ask.py --local works here too.
+  # pkgs.llama-cpp is the Metal build, already installed via packages.nix.
+  launchd.agents.llama-cpp = {
+    enable = true;
+    config = {
+      ProgramArguments = [
+        "${pkgs.llama-cpp}/bin/llama-server"
+        "--host"
+        "127.0.0.1"
+        "--port"
+        "8080"
+        "--models-preset"
+        "${llamaPresets}"
+        "--models-max"
+        "2"
+      ];
+      EnvironmentVariables.LLAMA_CACHE =
+        "${config.home.homeDirectory}/Library/Caches/llama.cpp";
+      RunAtLoad = true;
+      KeepAlive = true;
+      StandardOutPath = "${config.home.homeDirectory}/Library/Logs/llama-cpp.log";
+      StandardErrorPath = "${config.home.homeDirectory}/Library/Logs/llama-cpp.log";
+    };
+  };
 
   programs.ghostty = {
     enable = true;
