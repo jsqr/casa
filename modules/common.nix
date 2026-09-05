@@ -100,6 +100,16 @@
     extraSetFlags = [ "--ssh=false" ];
   };
 
+  # Monthly scrub: btrfs only detects checksum errors on read, so data that
+  # is never read is never checked. On hosts with DUP metadata (mkfs default)
+  # a scrub can repair metadata damage
+  #
+  # No fileSystems list: the module's default already folds mount points down
+  # to one entry per unique device, so kalliope's seven subvolume mounts of
+  # /dev/mapper/cryptroot become a single scrub; melpomene additionally
+  # picks up /backup as a separate device
+  services.btrfs.autoScrub.enable = true;
+
   # ------------------------------------------------------------------
   # Home Manager (system module). Each host sets home-manager.users.jj.
   # ------------------------------------------------------------------
