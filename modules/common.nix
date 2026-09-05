@@ -128,7 +128,8 @@
   environment.systemPackages = with pkgs; [
     curl wget git
     htop btop lsof strace ncdu
-    btrfs-progs compsize
+    btrfs-progs compsize smartmontools
     pciutils usbutils
+    file unzip zip p7zip
   ];
 }
