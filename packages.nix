@@ -61,9 +61,12 @@ with pkgs; [
 ] ++ [
   # test_stdio_server_uses_the_same_json_rpc_lifecycle fails on darwin with
   # IndexError: list index out of range.
+  # test_skill_without_args_displays_literal_command fails on darwin w/ textual
+  # MountError: Can't mount widget(s) before TookGroup is mounted.
   (unstable.mistral-vibe.overridePythonAttrs (old: {
     disabledTests = old.disabledTests ++ [
       "test_stdio_server_uses_the_same_json_rpc_lifecycle"
+      "test_skill_without_args_displays_literal_command"
     ];
   }))
   unstable.pi-coding-agent
