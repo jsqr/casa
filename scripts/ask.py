@@ -46,8 +46,11 @@ def run(
             OpenAIChatModel(LOCAL_MODEL, provider=provider), system_prompt=system
         )
         # Gemma 4 thinks by default and can spend a whole max_tokens budget
-        # doing it, returning empty content.
-        settings = OpenAIChatModelSettings(openai_reasoning_effort="none")
+        # doing it, returning empty content. llama-server ignores
+        # reasoning_effort; only the template's own switch turns it off.
+        settings = OpenAIChatModelSettings(
+            extra_body={"chat_template_kwargs": {"enable_thinking": False}}
+        )
     else:
         agent = Agent(model, system_prompt=system)
         settings = ModelSettings()
