@@ -132,7 +132,7 @@ in
       theme = "Kanagawa Dragon";
     };
     # delta and bat read the same theme DB.
-    themes."Kanagawa Dragon" = batTheme;
+    themes."Kanagawa Dragon".src = pkgs.writeText "kanagawa-dragon.tmTheme" batTheme;
   };
 
   programs.eza = {
