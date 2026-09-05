@@ -237,8 +237,8 @@ in
   services.samba = {
     enable = true;
     openFirewall = false;
-    enableNmbd = false;
-    enableWinbindd = false;
+    nmbd.enable = false;
+    winbindd.enable = false;
     settings = {
       global = {
         "workgroup" = "WORKGROUP";
