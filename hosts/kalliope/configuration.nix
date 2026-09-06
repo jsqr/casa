@@ -51,6 +51,19 @@ in
 
   services.fwupd.enable = true;
 
+  systemd.services.battery-charge-threshold = {
+    description = "Limit battery charge to 80%";
+    wantedBy = [ "local-fs.target" "suspend.target" "suspend-then-hibernate.target" "hibernate.target" ];
+    after = [ "local-fs.target" "suspend.target" "suspend-then-hibernate.target" "hibernate.target" ];
+    startLimitBurst = 5;
+    startLimitIntervalSec = 1;
+    serviceConfig = {
+      Type = "oneshot";
+      Restart = "on-failure";
+      ExecStart = "${pkgs.runtimeShell} -c 'echo 80 > /sys/class/power_supply/BAT?/charge_control_end_threshold'";
+    };
+  };
+
   # ------------------------------------------------------------------
   # PostgreSQL — local development cluster. Same dataDir, version and
   # extensions as melpomene. It serves nothing over the network: no
