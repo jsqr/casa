@@ -69,6 +69,43 @@ in
   };
 
   # ------------------------------------------------------------------
+  # Backup. Snapshots locally, then sends to melpomene over the tailnet.
+  # Retention is split: a short local window, with the depth kept on the
+  # target. snapshot_preserve_min = latest is load-bearing — it keeps the
+  # parent an incremental send needs, however long this machine is offline.
+  #
+  # @data is deliberately absent: it is nodatacow for Postgres, snapshotting
+  # would force CoW on it, and the cluster is regenerable anyway.
+  # ------------------------------------------------------------------
+  services.btrbk.instances.kalliope = {
+    onCalendar = "hourly";
+    settings = {
+      timestamp_format = "long";
+      snapshot_dir = ".snapshots";
+      ssh_user = "btrbk";
+      ssh_identity = "/var/lib/btrbk/.ssh/id_ed25519";
+
+      snapshot_preserve_min = "latest";
+      snapshot_preserve = "48h 7d";
+      target_preserve_min = "no";
+      target_preserve = "30d 24w 24m";
+
+      volume."/" = {
+        subvolume = {
+          "home" = { target = "ssh://melpomene/backup/kalliope/home"; };
+          "pictures" = { target = "ssh://melpomene/backup/kalliope/pictures"; };
+        };
+      };
+    };
+  };
+
+  # ExecStartPost only runs on success, so this timestamps the last run that
+  # actually reached melpomene rather than the last run that merely snapshotted.
+  # ~/bin/status reads it.
+  systemd.services.btrbk-kalliope.serviceConfig.ExecStartPost =
+    "${pkgs.coreutils}/bin/touch /var/lib/btrbk/.last-success";
+
+  # ------------------------------------------------------------------
   # PostgreSQL — local development cluster. Same dataDir, version and
   # extensions as melpomene. It serves nothing over the network: no
   # enableTCPIP, no listen_addresses, no tailnet pg_hba entry and no
