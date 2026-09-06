@@ -67,6 +67,10 @@ in
   programs.direnv.enable = true;
   programs.direnv.nix-direnv.enable = true;
 
+  # Replaces command-not-found, which needs channels and so is dead under flakes.
+  # Run `nix-index` once to build the database; the hook is silent until then.
+  programs.nix-index.enable = true;
+
   nix.gc = {
     automatic = true;
     dates = "weekly";

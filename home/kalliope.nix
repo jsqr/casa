@@ -70,6 +70,56 @@ in
     };
   };
 
+  programs.zathura = {
+    enable = true;
+    options = {
+      font = "JuliaMono 10";
+      selection-clipboard = "clipboard";
+
+      default-bg = c.bg;
+      default-fg = c.fg;
+      statusbar-bg = c.bgAlt;
+      statusbar-fg = c.fg;
+      inputbar-bg = c.bg;
+      inputbar-fg = c.fg;
+      notification-bg = c.bgAlt;
+      notification-fg = c.fg;
+      notification-error-bg = c.bgAlt;
+      notification-error-fg = c.urgent;
+      notification-warning-bg = c.bgAlt;
+      notification-warning-fg = c.warning;
+      completion-bg = c.bgAlt;
+      completion-fg = c.fg;
+      completion-highlight-bg = c.accent;
+      completion-highlight-fg = c.bg;
+      index-bg = c.bg;
+      index-fg = c.fg;
+      index-active-bg = c.accent;
+      index-active-fg = c.bg;
+      highlight-color = c.warning;
+      highlight-active-color = c.accent;
+
+      # Only used when recolor is toggled with Ctrl+R; off by default, since
+      # for authoring you want the document as it will print.
+      recolor-lightcolor = c.bg;
+      recolor-darkcolor = c.fg;
+    };
+  };
+
+  # Otherwise these come from whichever application registers first: PDFs had
+  # landed on GIMP, which broke the typst and LaTeX preview loops.
+  xdg.mimeApps = {
+    enable = true;
+    defaultApplications = {
+      "application/pdf" = "org.pwmt.zathura.desktop";
+      "text/plain" = "emacsclient.desktop";
+      "text/html" = "firefox.desktop";
+      "x-scheme-handler/http" = "firefox.desktop";
+      "x-scheme-handler/https" = "firefox.desktop";
+      "x-scheme-handler/claude-cli" = "claude-code-url-handler.desktop";
+    };
+  };
+
   # thalia sets package = null because ghostty comes from Homebrew there.
   # Settings otherwise match.
   programs.ghostty = {
