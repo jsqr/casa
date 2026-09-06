@@ -256,6 +256,8 @@ in
       consult
       minuet
       kanagawa-themes
+      citar
+      citar-denote
     ];
   };
   services.emacs.enable = true;

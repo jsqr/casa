@@ -41,6 +41,9 @@ in
     pkgs.brightnessctl
     pkgs.playerctl
     pkgs.proton-pass
+    # Stable, not unstable: a Zotero major version migrates zotero.sqlite in
+    # place, and generation rollback does not undo that.
+    pkgs.zotero
     pkgs.qobuz-player
     # GNOME Document Scanner; talks to the M426fdw over eSCL via sane-airscan.
     pkgs.simple-scan
@@ -117,6 +120,7 @@ in
       "x-scheme-handler/http" = "firefox.desktop";
       "x-scheme-handler/https" = "firefox.desktop";
       "x-scheme-handler/claude-cli" = "claude-code-url-handler.desktop";
+      "x-scheme-handler/zotero" = "zotero.desktop";
     };
   };
 

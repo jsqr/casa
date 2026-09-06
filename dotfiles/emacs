@@ -301,6 +301,28 @@
   ;; `denote-rename-buffer-format' for how to modify this.
   (denote-rename-buffer-mode 1))
 
+;; Citar -- bibliography comes from Zotero, auto-exported by Better BibTeX.
+;; citar knows how to insert citations in org, latex and markdown buffers;
+;; typst is not among them, so there C-c r i inserts the bare key.
+(use-package citar
+  :custom
+  (citar-bibliography '("~/Zotero/refs.bib"))
+  :bind
+  (("C-c r o" . citar-open)
+   ("C-c r i" . citar-insert-citation)))
+
+;; Links bibliography entries to Denote notes. citar-denote-file-type follows
+;; denote-file-type, already markdown-yaml above.
+(use-package citar-denote
+  :after (citar denote)
+  :bind
+  (("C-c r n" . citar-denote-open-note)
+   ("C-c r d" . citar-denote-dwim)
+   ("C-c r a" . citar-denote-add-reference)
+   ("C-c r f" . citar-denote-find-reference))
+  :config
+  (citar-denote-mode))
+
 ;; zsh -- NixOS has no /bin/zsh; resolve the real path via PATH or $SHELL.
 (let ((zsh (or (executable-find "zsh") (getenv "SHELL"))))
   (when zsh
