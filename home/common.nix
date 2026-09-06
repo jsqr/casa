@@ -71,6 +71,19 @@ in
   # Run `nix-index` once to build the database; the hook is silent until then.
   programs.nix-index.enable = true;
 
+  # Without ServerAlive probes a client whose connection dies waits out the TCP
+  # retransmission timeout, which is minutes. 15s x 3 gives up in about 45.
+  # enableDefaultConfig would otherwise pin ServerAliveInterval to 0, and it is
+  # deprecated besides; its other defaults match OpenSSH's own.
+  programs.ssh = {
+    enable = true;
+    enableDefaultConfig = false;
+    settings."*" = {
+      ServerAliveInterval = 15;
+      ServerAliveCountMax = 3;
+    };
+  };
+
   nix.gc = {
     automatic = true;
     dates = "weekly";

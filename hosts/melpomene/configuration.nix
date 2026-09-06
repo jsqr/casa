@@ -178,6 +178,12 @@ in
 
   networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ 5432 445 ];
 
+  # mosh, for kalliope: it survives roaming and suspend rather than just
+  # failing faster, which plain ssh keepalives cannot do.
+  networking.firewall.interfaces.tailscale0.allowedUDPPortRanges = [
+    { from = 60000; to = 61000; }
+  ];
+
   # ------------------------------------------------------------------
   # llama.cpp embedding server.
   # modelsPreset is rendered to an INI file and passed via --models-preset
