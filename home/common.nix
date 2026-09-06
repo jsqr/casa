@@ -366,11 +366,6 @@ in
       diff.colorMoved = "default";
       merge.conflictstyle = "zdiff3";
       "gpg \"ssh\"".allowedSignersFile = "~/.ssh/allowed_signers";
-      alias = {
-        pi     = "!git commit --trailer 'Assisted-By: Pi (qwen3.7-plus)'";
-        vibe   = "!git commit --trailer 'Assisted-By: Mistral Vibe'";
-        claude = "!git commit --trailer 'Assisted-By: Claude Code'";
-      };
     };
   };
 
