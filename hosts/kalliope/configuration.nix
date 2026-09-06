@@ -101,9 +101,10 @@ in
 
   # ExecStartPost only runs on success, so this timestamps the last run that
   # actually reached melpomene rather than the last run that merely snapshotted.
-  # ~/bin/status reads it.
+  # It lives outside /var/lib/btrbk, which tmpfiles enforces at 0750, so that
+  # ~/bin/status can stat it as an ordinary user.
   systemd.services.btrbk-kalliope.serviceConfig.ExecStartPost =
-    "${pkgs.coreutils}/bin/touch /var/lib/btrbk/.last-success";
+    "${pkgs.coreutils}/bin/touch /var/lib/btrbk-last-success";
 
   # ------------------------------------------------------------------
   # PostgreSQL — local development cluster. Same dataDir, version and
@@ -138,6 +139,7 @@ in
   # needs the same rule.
   systemd.tmpfiles.rules = [
     "d /data/18 0700 postgres postgres -"
+    "f /var/lib/btrbk-last-success 0644 btrbk btrbk -"
   ];
 
   # ------------------------------------------------------------------

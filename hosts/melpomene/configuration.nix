@@ -175,6 +175,7 @@ in
       [safe]
           directory = /home/jj/jsqr/casa
     ''}"
+    "f /var/lib/btrbk-last-success 0644 btrbk btrbk -"
   ];
 
   networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ 5432 445 ];
@@ -322,6 +323,10 @@ in
       };
     };
   };
+  # Success marker for ~/bin/status; see the kalliope instance for why it sits
+  # outside /var/lib/btrbk.
+  systemd.services.btrbk-local.serviceConfig.ExecStartPost =
+    "${pkgs.coreutils}/bin/touch /var/lib/btrbk-last-success";
   # btrbk should not run before /backup is mounted
   systemd.services.btrbk-local = {
     after = [ "backup.mount" ];

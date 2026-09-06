@@ -58,9 +58,10 @@ if [[ -n "$btrbk_unit" ]]; then
   btrbk_result="$(systemctl show "$btrbk_unit" -p Result --value)"
   btrbk_next="$(systemctl show "${btrbk_unit%.service}.timer" -p NextElapseUSecRealtime --value)"
   # Written by ExecStartPost, so it marks the last run that actually reached
-  # the target — not merely the last one that snapshotted locally.
-  stamp=/var/lib/btrbk/.last-success
-  if [[ -r "$stamp" ]]; then
+  # the target — not merely the last one that snapshotted locally. It sits
+  # outside /var/lib/btrbk because tmpfiles holds that at 0750.
+  stamp=/var/lib/btrbk-last-success
+  if [[ -s "$stamp" || ( -r "$stamp" && -n "$(systemctl show "$btrbk_unit" -p ExecMainExitTimestamp --value)" ) ]]; then
     success_ago="$(ago $(( $(date +%s) - $(stat -c %Y "$stamp") )))"
   else
     success_ago=""
@@ -114,8 +115,11 @@ if [[ -n "$btrbk_unit" ]]; then
   elif [[ "$btrbk_result" == "success" ]]; then
     if [[ -n "$success_ago" ]]; then
       row "Backup" "✓ last success $success_ago ago"
+    elif [[ -n "${btrbk_ran:-}" ]]; then
+      row "Backup" "✓ last run ok at $btrbk_ran"
     else
-      row "Backup" "✓ last run ok at ${btrbk_ran:-unknown}"
+      # systemd reports Result=success for a unit that has never run.
+      row "Backup" "no run recorded — next $btrbk_next"
     fi
   else
     row "Backup" "✗ last run $btrbk_result${success_ago:+ — last success $success_ago ago}"
