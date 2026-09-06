@@ -24,9 +24,11 @@ in
   # required for a later TPM2 enrolment via systemd-cryptenroll.
   boot = {
     loader.systemd-boot.enable = true;
+    loader.systemd-boot.configurationLimit = 10;
     loader.efi.canTouchEfiVariables = true;
     initrd.systemd.enable = true;
     supportedFilesystems = [ "btrfs" ];
+    tmp.cleanOnBoot = true;
 
     # kernels 7.1, 7.2 improve performance under Panther Lake (kalliope)
     kernelPackages = pkgs.linuxPackages_latest;
@@ -42,6 +44,10 @@ in
   # No cpuFreqGovernor: power-profiles-daemon (modules/desktop.nix) manages
   # frequency scaling and the two conflict.
   powerManagement.enable = true;
+
+  # Not the HybridSleep default: there is no swap, only zram, so hibernation
+  # cannot work and the default action silently does nothing.
+  services.upower.criticalPowerAction = "PowerOff";
 
   services.fwupd.enable = true;
 
