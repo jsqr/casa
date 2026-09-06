@@ -18,6 +18,10 @@ in
   networking.hostName = "kalliope";
   networking.domain = "jsqr.org";
 
+  # kalliope is a laptop, so sshd shouln't pick up the phone on random networks
+  services.openssh.openFirewall = false;
+  networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ 22 ];
+
   # No system.autoUpgrade; kalliope is updated by hand via ~/bin/update.
 
   # systemd initrd unlocks the LUKS container declared in disko.nix, and is
