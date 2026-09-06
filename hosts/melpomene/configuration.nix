@@ -110,12 +110,13 @@ in
   };
 
   # ------------------------------------------------------------------
-  # PostgreSQL — cluster lives on the @data btrfs subvolume so the
-  # existing btrbk hourly snapshot pipeline covers it. /data is mounted
-  # nodatacow (see hardware-configuration.nix) to avoid CoW fragmentation
-  # on in-place page rewrites; the module's `environment.systemPackages`
-  # default exposes psql / pg_ctl / initdb / createdb / dropdb / pg_dump /
-  # pg_restore on the user PATH automatically.
+  # PostgreSQL — cluster lives on the @data btrfs subvolume, mounted nodatacow
+  # (see hardware-configuration.nix) to avoid CoW fragmentation on in-place
+  # page rewrites. btrbk deliberately does not cover it: snapshotting a
+  # nodatacow subvolume forces CoW on the first write after each snapshot,
+  # and the cluster is regenerable from ensureDatabases anyway. The module's
+  # `environment.systemPackages` default exposes psql / pg_ctl / initdb /
+  # createdb / dropdb / pg_dump / pg_restore on the user PATH automatically.
   # ------------------------------------------------------------------
   services.postgresql = {
     enable = true;
@@ -316,7 +317,6 @@ in
           subvolume = {
             "home"   = { target = "/backup/home"; };
             "krater" = { target = "/backup/krater"; };
-            "data"   = { target = "/backup/data"; };
           };
         };
       };
