@@ -45,6 +45,13 @@
                   mountpoint = "/home";
                   mountOptions = [ "compress=zstd:3" "noatime" ];
                 };
+                # Photo library, kept out of /home so btrbk can address it as
+                # its own subvolume under volume "/". Created by hand; disko
+                # is not re-run on a provisioned disk.
+                "@pictures" = {
+                  mountpoint = "/pictures";
+                  mountOptions = [ "compress=zstd:3" "noatime" ];
+                };
                 "@nix" = {
                   mountpoint = "/nix";
                   mountOptions = [ "compress=zstd:3" "noatime" ];
