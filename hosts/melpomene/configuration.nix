@@ -286,6 +286,13 @@ in
     options = [ "compress=zstd:3" "noatime" "nofail" "x-systemd.device-timeout=5s" ];
   };
 
+  # kalliope pushes its snapshots here. The module gives this key a btrbk user
+  # restricted by ssh_filter_btrbk.sh, so PermitRootLogin stays "no".
+  services.btrbk.sshAccess = [{
+    key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJm7/pzVOuCT7RSlgihOTlGgQn7nSakfU2HusQHkYKtk btrbk@kalliope";
+    roles = [ "target" "delete" "info" ];
+  }];
+
   services.btrbk = {
     instances.local = {
       onCalendar = "hourly";
