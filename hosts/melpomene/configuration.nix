@@ -54,6 +54,9 @@ in
   # ------------------------------------------------------------------
   boot = {
     loader.systemd-boot.enable = true;
+    # Nightly autoUpgrade had taken /boot to 67% across 40 entries; the ESP is
+    # 1 GiB and a full one fails the bootloader install mid-upgrade.
+    loader.systemd-boot.configurationLimit = 20;
     loader.efi.canTouchEfiVariables = true;
     # ESP is mounted at /boot directly, so the
     # default efiSysMountPoint of /boot is correct — no override.
