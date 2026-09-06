@@ -109,6 +109,26 @@ in
     };
   };
 
+  # Pins XDG_PICTURES_DIR at the photo subvolume. Without a user-dirs.dirs
+  # anything asking for it falls back to the spec default ~/Pictures, which is
+  # how that directory kept reappearing. Unused dirs are null, so they are
+  # omitted rather than created.
+  xdg.userDirs = {
+    enable = true;
+    # noctalia reads getenv("XDG_PICTURES_DIR"), so the session variables have
+    # to be exported, not just written to user-dirs.dirs.
+    setSessionVariables = true;
+    pictures = "/pictures";
+    download = "${config.home.homeDirectory}/Downloads";
+    desktop = null;
+    documents = null;
+    music = null;
+    projects = null;
+    publicShare = null;
+    templates = null;
+    videos = null;
+  };
+
   # Otherwise these come from whichever application registers first: PDFs had
   # landed on GIMP, which broke the typst and LaTeX preview loops.
   xdg.mimeApps = {

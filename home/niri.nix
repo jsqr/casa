@@ -79,7 +79,7 @@ in
         clip-to-geometry true
     }
 
-    screenshot-path "~/pictures/screenshots/screenshot-%Y-%m-%d-%H-%M-%S.png"
+    screenshot-path "~/Screenshots/screenshot-%Y-%m-%d-%H-%M-%S.png"
 
     // The nixpkgs niri module sets enableXWayland = false, so XWayland
     // comes from xwayland-satellite and niri must start it.

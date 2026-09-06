@@ -105,6 +105,11 @@ lib.mkIf (cfg.shell == "noctalia") {
       };
       shell.font = "JuliaMono";
 
+      # Both default to empty, which means XDG_PICTURES_DIR — now the photo
+      # subvolume, which neither of these belongs in.
+      shell.screenshot.directory = "${config.home.homeDirectory}/Screenshots";
+      wallpaper.directory = "${config.home.homeDirectory}/Wallpapers";
+
       # Bar widget placement. start/center/end are the three bar zones; each
       # array replaces the built-in default wholesale, so all three are
       # spelled out even where they match upstream.
