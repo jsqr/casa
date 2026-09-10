@@ -30,6 +30,9 @@ in
     loader.systemd-boot.enable = true;
     loader.systemd-boot.configurationLimit = 10;
     loader.efi.canTouchEfiVariables = true;
+    # No cmdline editor. Doesn't matter while LUKS prompts for a passphrase, but
+    # after TPM2 enrolment `e` would then be a root shell on decrypted data.
+    loader.systemd-boot.editor = false;
     initrd.systemd.enable = true;
     supportedFilesystems = [ "btrfs" ];
     tmp.cleanOnBoot = true;
