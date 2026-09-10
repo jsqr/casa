@@ -12,6 +12,13 @@
 
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
 
+    # Prebuilt nix-index database, regenerated upstream weekly. Pinned here so
+    # it refreshes with `nix flake update` instead of a manual `nix-index` run.
+    nix-index-database = {
+      url = "github:nix-community/nix-index-database";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     disko = {
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";

@@ -141,6 +141,14 @@ in
     };
   };
 
+  # Mount removable media at /run/media/jj. Noctalia should display tray icon.
+  services.udiskie = {
+    enable = true;
+    automount = true;
+    notify = true;
+    tray = "auto"; # icon only while a device is present
+  };
+
   # thalia sets package = null because ghostty comes from Homebrew there.
   # Settings otherwise match.
   programs.ghostty = {

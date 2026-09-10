@@ -48,6 +48,8 @@ let
     '';
 in
 {
+  imports = [ inputs.nix-index-database.homeModules.nix-index ];
+
   home.stateVersion = "24.11";
 
   home.packages = import ../packages.nix { inherit pkgs unstable; };
@@ -67,9 +69,10 @@ in
   programs.direnv.enable = true;
   programs.direnv.nix-direnv.enable = true;
 
-  # Replaces command-not-found, which needs channels and so is dead under flakes.
-  # Run `nix-index` once to build the database; the hook is silent until then.
+  # Replaces command-not-found, which doesn't work under flakes apparently.
+  # The database comes prebuilt from the nix-index-database input
   programs.nix-index.enable = true;
+  programs.nix-index-database.comma.enable = true; # `, ffmpeg` runs it once
 
   # Without ServerAlive probes a client whose connection dies waits out the TCP
   # retransmission timeout, which is minutes. 15s x 3 gives up in about 45.
