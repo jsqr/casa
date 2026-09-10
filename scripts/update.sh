@@ -59,9 +59,11 @@ if [[ "$PLATFORM" == darwin ]]; then
       && home-manager switch --flake "$FLAKE#$HOST"
   }
 else
+    # `just switch`, not nixos-rebuild directly: that recipe has a check for
+    # when the new fstab differs
   build_step() {
     ( cd "$FLAKE" && git merge --ff-only '@{u}' && nix flake update ) \
-      && sudo nixos-rebuild switch --flake "$FLAKE#$HOST"
+      && ( cd "$FLAKE" && just switch )
   }
 fi
 
@@ -69,5 +71,7 @@ if build_step && rustup update && uv tool upgrade --all; then
   echo "✓ $HOST updated (flake.lock left modified — commit when ready)"
 else
   echo "✗ update failed (see above); flake.lock may be modified" >&2
+  [[ "$PLATFORM" == nixos ]] \
+    && echo "  if the mount guard refused: run 'just stage', then reboot" >&2
   exit 1
 fi
