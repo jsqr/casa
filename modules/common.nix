@@ -11,6 +11,10 @@
     experimental-features = [ "nix-command" "flakes" ];
     auto-optimise-store = true;
     trusted-users = [ "root" "jj" ];
+
+    # Maintain devShells across the weekly GC (see below).
+    keep-outputs = true;
+    keep-derivations = true;
   };
   nix.gc = {
     automatic = true;
