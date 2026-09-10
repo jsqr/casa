@@ -1,6 +1,7 @@
 # Shell layer: Noctalia v5. One program providing the bar, launcher,
 # notifications, lock screen, wallpaper, clipboard history, OSDs and control
-# centre.
+# centre. Contributes its compositor bits through the kalliope.niri.* options
+# in ./default.nix.
 #
 # v5 merges every *.toml in ~/.config/noctalia, which Nix controls and makes
 # read-only, with runtime overrides in $XDG_STATE_HOME/noctalia/settings.toml.
@@ -11,7 +12,6 @@
 
 let
   c = import ../../lib/kanagawa-dragon.nix;
-  cfg = config.kalliope;
 
   pkgsUnstable = import inputs.nixpkgs-unstable {
     inherit (pkgs.stdenv.hostPlatform) system;
@@ -78,7 +78,7 @@ let
   # `noctalia msg panel-toggle` with an unknown id, which prints the valid set.
   msg = args: ''spawn "noctalia" "msg" ${lib.concatMapStringsSep " " (a: ''"${a}"'') args};'';
 in
-lib.mkIf (cfg.shell == "noctalia") {
+{
 
   programs.noctalia = {
     enable = true;
@@ -166,9 +166,6 @@ lib.mkIf (cfg.shell == "noctalia") {
     run mkdir -p "$d"
     [ -e "$d/noctalia.kdl" ] || run touch "$d/noctalia.kdl"
   '';
-
-  # Noctalia's included KDL supplies focus-ring.
-  kalliope.niri.focusRing = false;
 
   # Media and brightness keys go through Noctalia rather than wpctl,
   # brightnessctl and playerctl, so its OSD overlays appear.

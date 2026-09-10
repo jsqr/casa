@@ -18,9 +18,6 @@ in
     ./shells
   ];
 
-  # Selects the shell layer. Both are configured; see home/shells/.
-  kalliope.shell = "noctalia";
-
   home.username = "jj";
   home.homeDirectory = "/home/jj";
 

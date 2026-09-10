@@ -6,21 +6,12 @@
 { config, pkgs, lib, ... }:
 
 let
-  c = import ../lib/kanagawa-dragon.nix;
   cfg = config.kalliope.niri;
 
   # spawn-at-startup takes one quoted token per argv element.
   startupLines = lib.concatMapStringsSep "\n"
     (argv: "spawn-at-startup " + lib.concatMapStringsSep " " (a: ''"${a}"'') argv)
     cfg.startup;
-
-  focusRing = lib.optionalString cfg.focusRing ''
-    focus-ring {
-            width 2
-            active-color "${c.accent}"
-            inactive-color "${c.inactive}"
-        }
-  '';
 in
 {
   home.packages = [ pkgs.xwayland-satellite ];
@@ -61,7 +52,6 @@ in
     layout {
         gaps 12
         center-focused-column "never"
-        ${focusRing}
         default-column-width { proportion 0.5; }
         preset-column-widths {
             proportion 0.33333

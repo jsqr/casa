@@ -1,54 +1,34 @@
-# Options selecting between the two shell layers in this directory.
-#
-# Both modules are always imported. Each wraps its config in mkIf on
-# kalliope.shell, so only one defines anything at a time.
+# The seam between the compositor config and the shell layer.
 #
 # A shell layer provides the bar, launcher, notifications, lock screen and
-# wallpaper, and the niri keybinds that invoke them. The kalliope.niri.*
-# options let each module supply its own spawn-at-startup entries and KDL
-# fragment, so changing kalliope.shell updates the compositor config too.
+# wallpaper, and the niri keybinds that invoke them. noctalia.nix is the only
+# one, but it contributes through these options rather than editing
+# home/niri.nix, so the compositor config stays shell-agnostic and a second
+# shell would only have to define its own values.
 { lib, ... }:
 
 {
   imports = [
-    ./alacarte.nix
     ./noctalia.nix
   ];
 
-  options.kalliope = {
-    shell = lib.mkOption {
-      type = lib.types.enum [ "alacarte" "noctalia" ];
-      default = "alacarte";
-      description = "Which shell layer to use.";
+  options.kalliope.niri = {
+    startup = lib.mkOption {
+      type = lib.types.listOf (lib.types.listOf lib.types.str);
+      default = [ ];
+      description = "spawn-at-startup entries, each given as an argv list.";
     };
 
-    niri = {
-      startup = lib.mkOption {
-        type = lib.types.listOf (lib.types.listOf lib.types.str);
-        default = [ ];
-        description = "spawn-at-startup entries, each given as an argv list.";
-      };
+    binds = lib.mkOption {
+      type = lib.types.lines;
+      default = "";
+      description = "KDL fragment spliced into niri's binds block.";
+    };
 
-      binds = lib.mkOption {
-        type = lib.types.lines;
-        default = "";
-        description = "KDL fragment spliced into niri's binds block.";
-      };
-
-      extraConfig = lib.mkOption {
-        type = lib.types.lines;
-        default = "";
-        description = "KDL spliced in at top level, outside any block.";
-      };
-
-      focusRing = lib.mkOption {
-        type = lib.types.bool;
-        default = true;
-        description = ''
-          Whether home/niri.nix emits a layout.focus-ring block. Noctalia
-          supplies one in its own included KDL and sets this false.
-        '';
-      };
+    extraConfig = lib.mkOption {
+      type = lib.types.lines;
+      default = "";
+      description = "KDL spliced in at top level, outside any block.";
     };
   };
 }
