@@ -5,7 +5,7 @@
 # Tested 2026-09-11 with ALTER SYSTEM before this was written down.
 #
 # After the rebuild, once:
-#     tailscale funnel --bg --tcp=10000 tcp://localhost:5432
+#     tailscale funnel --bg --tcp=10000 tcp://127.0.0.1:5432
 #     ashokan db init          # creates ashokan_reader
 #     psql -d ashokan -c "ALTER ROLE ashokan_reader PASSWORD '...'"
 # The funnel config persists in tailscaled's state.
