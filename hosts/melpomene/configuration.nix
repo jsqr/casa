@@ -20,6 +20,7 @@ in
   imports = [
     ./hardware-configuration.nix
     ../../modules/common.nix
+    ./postgres-tls.nix
   ];
 
   system.stateVersion = "25.11";
@@ -143,14 +144,6 @@ in
     # `ALTER ROLE jj SUPERUSER;` — rebuilds won't re-run this script.
     initialScript = pkgs.writeText "pg-init.sql" ''
       CREATE ROLE jj WITH LOGIN SUPERUSER;
-    '';
-
-    authentication = lib.mkOverride 10 ''
-      # TYPE  DATABASE  USER  ADDRESS         METHOD
-      local   all       all                   peer map=jjmap
-      host    all       all   127.0.0.1/32    scram-sha-256
-      host    all       all   ::1/128         scram-sha-256
-      host    all       all   100.64.0.0/10   scram-sha-256
     '';
 
     # 100.64.0.0/10 is the Tailscale CGNAT range (RFC 6598).
