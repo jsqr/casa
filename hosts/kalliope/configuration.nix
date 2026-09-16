@@ -58,6 +58,24 @@ in
 
   services.fwupd.enable = true;
 
+  # melpomene's data partition, over the tailnet. Automounted on first use
+  # and dropped after ten minutes idle. soft: a server that is unreachable
+  # after a suspend returns EIO instead of hanging the process.
+  #
+  # A fileSystems change is applied with `just stage` and a reboot, never a
+  # live switch: see the guard in the justfile.
+  fileSystems."/krater" = {
+    device = "melpomene:/krater";
+    fsType = "nfs";
+    options = [
+      "nfsvers=4.2" "noatime"
+      "soft" "timeo=50" "retrans=3"
+      "noauto" "x-systemd.automount" "x-systemd.idle-timeout=600"
+      "x-systemd.mount-timeout=10s" "x-systemd.after=tailscaled.service"
+      "_netdev" "nofail"
+    ];
+  };
+
   systemd.services.battery-charge-threshold = {
     description = "Limit battery charge to 80%";
     wantedBy = [ "local-fs.target" "suspend.target" "suspend-then-hibernate.target" "hibernate.target" ];
