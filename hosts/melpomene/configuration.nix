@@ -69,8 +69,8 @@ in
   # useDHCP is set to false explicitly because with networkd it
   # otherwise defaults to true and would run DHCP on top of the static
   # address declared below. Firewall is left to defaults; openssh opens its
-  # own port via `openFirewall = true`. Samba and Postgres are instead gated
-  # to tailscale0 (see networking.firewall.interfaces below).
+  # own port via `openFirewall = true`. Samba, NFS and Postgres are instead
+  # gated to tailscale0 (see networking.firewall.interfaces below).
   # ------------------------------------------------------------------
   networking = {
     hostName = "melpomene";
@@ -171,7 +171,7 @@ in
     "f /var/lib/btrbk-last-success 0644 btrbk btrbk -"
   ];
 
-  networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ 5432 445 ];
+  networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ 5432 445 2049 ];
 
   # mosh, for kalliope: it survives roaming and suspend rather than just
   # failing faster, which plain ssh keepalives cannot do.
@@ -233,6 +233,15 @@ in
     enable = true;
     autoPrune.enable = true;
   };
+
+  # /krater for kalliope. NFSv4 only, so 2049 is the one port on the wire;
+  # rpcbind and mountd stay local. uid 1000 and gid 100 are the same on
+  # both hosts, so sec=sys passes ownership through unmapped.
+  services.nfs.server = {
+    enable = true;
+    exports = "/krater  100.64.0.0/10(rw,sync,no_subtree_check)";
+  };
+  services.nfs.settings.nfsd = { vers3 = false; udp = false; };
 
   # Tailnet-only: openFirewall would open 139/445 on every interface, which
   # put the share on the LAN. The tailscale0 rule above gates it the same way
