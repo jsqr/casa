@@ -116,6 +116,8 @@ in
         Mod+Shift+Minus { set-window-height "-10%"; }
         Mod+Shift+Equal { set-window-height "+10%"; }
         Mod+Shift+R { switch-preset-window-height; }
+        Mod+BracketLeft  { consume-or-expel-window-left; }
+        Mod+BracketRight { consume-or-expel-window-right; }
 
         Print { screenshot; }
         Ctrl+Print { screenshot-screen; }
