@@ -113,6 +113,9 @@ in
         Mod+C { center-column; }
         Mod+Minus { set-column-width "-10%"; }
         Mod+Equal { set-column-width "+10%"; }
+        Mod+Shift+Minus { set-window-height "-10%"; }
+        Mod+Shift+Equal { set-window-height "+10%"; }
+        Mod+Shift+R { switch-preset-window-height; }
 
         Print { screenshot; }
         Ctrl+Print { screenshot-screen; }
