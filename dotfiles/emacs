@@ -453,11 +453,14 @@
 ;; FIM code completion
 (use-package minuet
   :bind
-  (("M-y" . #'minuet-complete-with-minibuffer)
-   ("M-i" . #'minuet-show-suggestion)
-   ("C-c m" . #'minuet-configure-provider))
+  (("M-i"     . #'minuet-show-suggestion)
+   ("C-c M-i" . #'minuet-auto-suggestion-mode)
+   ("C-c M-y" . #'minuet-complete-with-minibuffer)
+   ("C-c m"   . #'minuet-configure-provider))
   :config
   (setq minuet-provider 'codestral)
+  ;; Only the first candidate is ever shown inline.
+  (setq minuet-n-completions 1)
   (minuet-set-optional-options minuet-codestral-options :max_tokens 256)
   (define-key minuet-active-mode-map (kbd "M-p") #'minuet-previous-suggestion)
   (define-key minuet-active-mode-map (kbd "M-n") #'minuet-next-suggestion)

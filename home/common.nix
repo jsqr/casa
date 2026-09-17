@@ -244,7 +244,7 @@ in
     # The elisp config (dotfiles/emacs) drops :ensure/:vc and just requires
     # these off the load-path. Built-ins (eglot, org, which-key, use-package)
     # are not listed. Tree-sitter grammars are provided separately, above.
-    extraPackages = epkgs: with epkgs; [
+    extraPackages = epkgs: (with epkgs; [
       envrc
       denote
       diminish
@@ -270,10 +270,13 @@ in
       vertico
       orderless
       consult
-      minuet
       kanagawa-themes
       citar
       citar-denote
+    ]) ++ [
+      # Newer than nixos-26.05's 20260424.430, which mangles FIM indentation.
+      # Drop once nixos-26.11 catches up.
+      (unstable.emacsPackagesFor config.programs.emacs.package).minuet
     ];
   };
   services.emacs.enable = true;
