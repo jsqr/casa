@@ -23,9 +23,12 @@
     # The funnel forwarder connects from 127.0.0.1; the servers run on
     # kalliope connect over the tailnet. The reader role reaches one
     # database over TLS from those two and is rejected everywhere else; the
-    # existing lines stay for jj.
+    # existing lines stay for jj. The MCP service on this host connects as
+    # the reader over the socket, by peer identity (ashokan-mcp.nix maps
+    # its user), so it holds no password.
     authentication = lib.mkOverride 10 ''
       # TYPE     DATABASE  USER            ADDRESS         METHOD
+      local      ashokan   ashokan_reader                  peer map=mcpmap
       hostssl    ashokan   ashokan_reader  127.0.0.1/32    scram-sha-256
       hostssl    ashokan   ashokan_reader  100.64.0.0/10   scram-sha-256
       host       all       ashokan_reader  all             reject

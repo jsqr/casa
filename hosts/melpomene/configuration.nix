@@ -21,6 +21,7 @@ in
     ./hardware-configuration.nix
     ../../modules/common.nix
     ./postgres-tls.nix
+    ./ashokan-mcp.nix
   ];
 
   system.stateVersion = "25.11";

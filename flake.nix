@@ -24,6 +24,33 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # The ashokan MCP server on melpomene is built from the ashokan repo's
+    # uv.lock: uv2nix turns the lock into a python package set, and
+    # build-system-pkgs supplies the build backends (hatchling here).
+    # See hosts/melpomene/ashokan-mcp.nix.
+    pyproject-nix = {
+      url = "github:pyproject-nix/pyproject.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    uv2nix = {
+      url = "github:pyproject-nix/uv2nix";
+      inputs.pyproject-nix.follows = "pyproject-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    pyproject-build-systems = {
+      url = "github:pyproject-nix/build-system-pkgs";
+      inputs.pyproject-nix.follows = "pyproject-nix";
+      inputs.uv2nix.follows = "uv2nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    # The repo is private, so this is fetched over ssh as jj; the nightly
+    # lock bump on melpomene runs as jj too, and the root build reuses what
+    # that put in the store. Point ref at main once mcp-consolidation lands.
+    ashokan = {
+      url = "git+ssh://git@github.com/jsqr/ashokan.git?ref=mcp-consolidation";
+      flake = false;
+    };
+
     # Only for homeModules.default: home-manager release-26.05 has no
     # programs.noctalia (master does). The package itself comes from
     # nixpkgs-unstable — see home/shells/noctalia.nix.
