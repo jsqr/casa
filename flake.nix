@@ -45,9 +45,9 @@
     };
     # The repo is private, so this is fetched over ssh as jj; the nightly
     # lock bump on melpomene runs as jj too, and the root build reuses what
-    # that put in the store. Point ref at main once mcp-consolidation lands.
+    # that put in the store.
     ashokan = {
-      url = "git+ssh://git@github.com/jsqr/ashokan.git?ref=mcp-consolidation";
+      url = "git+ssh://git@github.com/jsqr/ashokan.git?ref=main";
       flake = false;
     };
 
