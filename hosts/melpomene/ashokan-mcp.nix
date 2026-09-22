@@ -50,9 +50,9 @@ let
   # of it never enters the environment.
   start = pkgs.writeShellScript "ashokan-mcp-start" ''
     set -euo pipefail
-    eval "$(${pkgs.gnugrep}/bin/grep -E '^export ASHOKAN_OPENROUTER_API_KEY=' \
+    eval "$(${pkgs.gnugrep}/bin/grep -E '^export FIREWORKS_API_KEY=' \
       "$CREDENTIALS_DIRECTORY/secrets")"
-    export OPENROUTER_API_KEY="$ASHOKAN_OPENROUTER_API_KEY"
+    export FIREWORKS_API_KEY
     exec ${venv}/bin/python -m ashokan_mcp.server
   '';
 in
