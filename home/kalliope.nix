@@ -45,8 +45,6 @@ in
     # GNOME Document Scanner; talks to the M426fdw over eSCL via sane-airscan.
     pkgs.simple-scan
     pkgs.signal-desktop
-    # Terminal Signal client; text only, no calls or stories.
-    pkgs.gurk-rs
   ];
 
   # From programs.firefox, not home.packages, so the Proton Pass extension can
