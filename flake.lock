@@ -3,11 +3,11 @@
     "ashokan": {
       "flake": false,
       "locked": {
-        "lastModified": 1790039080,
-        "narHash": "sha256-6Oygzb+R1oAr40nRDvOS5T1uP7nyF8fEfssKXBZILGY=",
+        "lastModified": 1790112620,
+        "narHash": "sha256-aqgntFCC0U4Yo5ybtZzzDDtToF3FgJ5uJHDwMXzAxzQ=",
         "ref": "main",
-        "rev": "762289b204ccde04658ad6b529ae53c9a586904b",
-        "revCount": 40,
+        "rev": "b2f5fdc365bced0f3f925c8e502241e215d1f81b",
+        "revCount": 43,
         "type": "git",
         "url": "ssh://git@github.com/jsqr/ashokan.git"
       },
