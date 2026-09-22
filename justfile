@@ -26,7 +26,7 @@ diff:
     nix build --no-link --print-out-paths .#nixosConfigurations.$(hostname -s).config.system.build.toplevel \
       | xargs -I {} nix store diff-closures /run/current-system {}
 
-# Switch the running system to this checkout; refuse if any mount changed
+# Switch the running system to this checkout; refuse if a mount or systemd changed
 switch:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -35,6 +35,11 @@ switch:
     if ! diff -q <(grep -v '^#' /etc/fstab) <(grep -v '^#' "$new/etc/fstab") >/dev/null; then
         echo "fstab differs. A live switch restarts local-fs.target, which stranded" >&2
         echo "this machine on 2026-09-10. Use 'just stage' and reboot instead." >&2
+        exit 1
+    fi
+    if [ "$(readlink /run/current-system/systemd)" != "$(readlink "$new/systemd")" ]; then
+        echo "systemd differs. A live switch re-executes PID 1, which froze this" >&2
+        echo "machine on 2026-09-22. Use 'just stage' and reboot instead." >&2
         exit 1
     fi
     sudo nixos-rebuild switch --flake ".#$host" 2>&1 | tee /tmp/switch.log

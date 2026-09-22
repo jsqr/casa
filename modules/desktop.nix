@@ -69,6 +69,12 @@
   # NetworkManager rather than melpomene's networkd + static address.
   networking.networkmanager.enable = true;
 
+  # Restart NetworkManager after the switch has re-executed systemd, not
+  # stop it before. Stopping it drops the Wi-Fi, and a systemd re-exec with
+  # an NFS share mounted over a dead link hangs the fstab generator and
+  # freezes PID 1 (NixOS/nixpkgs#375376; kalliope, 2026-09-22).
+  systemd.services.NetworkManager.stopIfChanged = false;
+
   # nixos-hardware enables power-profiles-daemon only on its AMD Framework
   # branch, so Intel hosts must set it here.
   #

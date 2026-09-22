@@ -76,6 +76,11 @@ in
     ];
   };
 
+  # A fatal PID 1 startup error (a hung generator on a re-exec, for one)
+  # otherwise freezes the machine until the power button. Reboot instead;
+  # the new generation boots cleanly.
+  systemd.settings.Manager.CrashAction = "reboot";
+
   systemd.services.battery-charge-threshold = {
     description = "Limit battery charge to 80%";
     wantedBy = [ "local-fs.target" "suspend.target" "suspend-then-hibernate.target" "hibernate.target" ];
