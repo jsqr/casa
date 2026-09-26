@@ -11,66 +11,66 @@
 { config, pkgs, lib, inputs, ... }:
 
 let
-  c = import ../../lib/kanagawa-dragon.nix;
+  k = import ../../lib/kanagawa;
 
   pkgsUnstable = import inputs.nixpkgs-unstable {
     inherit (pkgs.stdenv.hostPlatform) system;
   };
 
-  # Noctalia's palette JSON uses Material 3 names. The mapping is specific to
-  # this consumer, so it stays here rather than in lib/kanagawa-dragon.nix.
-  # Omitting `light` uses the dark variant for both modes.
-  #
-  # Noctalia's bundled "Kanagawa" scheme is wave (mSurface #1f1f28), not
-  # dragon.
-  palette = {
-    dark = {
-      mSurface = c.dragonBlack3;
-      mOnSurface = c.dragonWhite;
-      mSurfaceVariant = c.dragonBlack4;
-      mOnSurfaceVariant = c.dragonAsh;
-      mPrimary = c.dragonBlue2;
-      mOnPrimary = c.dragonBlack3;
-      mSecondary = c.dragonGreen;
-      mOnSecondary = c.dragonBlack3;
-      mTertiary = c.dragonYellow;
-      mOnTertiary = c.dragonBlack3;
-      mError = c.dragonRed;
-      mOnError = c.dragonBlack3;
-      mOutline = c.dragonBlack5;
-      mShadow = c.dragonBlack0;
-      mHover = c.dragonBlue2;
-      mOnHover = c.dragonBlack3;
+  # Material 3 names, specific to this consumer. Noctalia's bundled "Kanagawa"
+  # is wave/lotus, not dragon.
+  paletteMode = c: {
+    mSurface = c.bg;
+    mOnSurface = c.fg;
+    mSurfaceVariant = c.bgP1;
+    mOnSurfaceVariant = c.synComment;
+    mPrimary = c.synFun;
+    mOnPrimary = c.bg;
+    mSecondary = c.brightGreen;
+    mOnSecondary = c.bg;
+    mTertiary = c.synIdentifier;
+    mOnTertiary = c.bg;
+    mError = c.red;
+    mOnError = c.bg;
+    mOutline = c.bgP2;
+    mShadow = c.bgM3;
+    mHover = c.synFun;
+    mOnHover = c.bg;
 
-      terminal = {
-        background = c.dragonBlack3;
-        foreground = c.dragonWhite;
-        cursor = c.dragonWhite;
-        cursorText = c.dragonBlack3;
-        selectionBg = c.dragonBlack4;
-        selectionFg = c.dragonWhite;
-        normal = {
-          black = c.ansi.black;
-          red = c.ansi.red;
-          green = c.ansi.green;
-          yellow = c.ansi.yellow;
-          blue = c.ansi.blue;
-          magenta = c.ansi.magenta;
-          cyan = c.ansi.cyan;
-          white = c.ansi.white;
-        };
-        bright = {
-          black = c.ansi.brightBlack;
-          red = c.ansi.brightRed;
-          green = c.ansi.brightGreen;
-          yellow = c.ansi.brightYellow;
-          blue = c.ansi.brightBlue;
-          magenta = c.ansi.brightMagenta;
-          cyan = c.ansi.brightCyan;
-          white = c.ansi.brightWhite;
-        };
+    # c.term, not the UI accents above: bright stays distinct from regular.
+    terminal = {
+      background = c.term.background;
+      foreground = c.term.foreground;
+      cursor = c.term.cursor;
+      cursorText = c.term.cursorText;
+      selectionBg = c.term.selectionBg;
+      selectionFg = c.term.selectionFg;
+      normal = {
+        black = c.term.black;
+        red = c.term.red;
+        green = c.term.green;
+        yellow = c.term.yellow;
+        blue = c.term.blue;
+        magenta = c.term.magenta;
+        cyan = c.term.cyan;
+        white = c.term.white;
+      };
+      bright = {
+        black = c.term.brightBlack;
+        red = c.term.brightRed;
+        green = c.term.brightGreen;
+        yellow = c.term.brightYellow;
+        blue = c.term.brightBlue;
+        magenta = c.term.brightMagenta;
+        cyan = c.term.brightCyan;
+        white = c.term.brightWhite;
       };
     };
+  };
+
+  palette = {
+    dark = paletteMode k.dragon;
+    light = paletteMode k.lotus;
   };
 
   # v5 replaced v4's `ipc call <target> <function>` with flat `msg <verb>`
@@ -95,14 +95,28 @@ in
     # Runs `noctalia config validate` at build time.
     checkConfig = true;
 
+    # Misnamed now it carries both, but the runtime settings.toml names it and
+    # wins, so renaming orphans the selection until it is re-picked in the GUI.
     customPalettes.kanagawa-dragon = palette;
 
     settings = {
       theme = {
-        mode = "dark";
+        # Initial value only; theme-mode-toggle persists to settings.toml.
+        mode = config.casa.themeMode.default;
         source = "custom";
         custom_palette = "kanagawa-dragon";
+
+        # gtk3/gtk4 write libadwaita colours; niri fills noctalia.kdl. Not
+        # foot, ghostty or emacs: each has a better native mechanism.
+        templates = {
+          enable_builtin_templates = true;
+          builtin_ids = [ "gtk3" "gtk4" "niri" "qt" "btop" ];
+        };
       };
+
+      # No argument: fireWithEnv unsetenv's NOCTALIA_THEME_MODE before the async
+      # hook child starts, so it reads empty. See casa.themeMode.detect below.
+      hooks.theme_mode_changed = lib.getExe config.casa.themeMode.package;
       shell.font = "JuliaMono";
 
       # Both default to empty, which means XDG_PICTURES_DIR — now the photo
@@ -143,16 +157,22 @@ in
     };
   };
 
+  # The only reliable way to ask; the hook's environment variable is racy.
+  casa.themeMode.detect =
+    "${lib.getExe' config.programs.noctalia.package "noctalia"} msg theme-mode-get";
+
   # Contributed to home/niri.nix. No spawn-at-startup entries; the systemd
   # user service above starts it.
   kalliope.niri.startup = [ ];
 
-  # Noctalia writes ~/.config/niri/noctalia.kdl from its palette, covering
-  # focus-ring, border, tab-indicator, insert-hint and recent-windows. niri
-  # 26.04 supports `include`.
+  # The niri template, enabled above, writes noctalia.kdl from the active
+  # palette, covering focus-ring, border, tab-indicator, insert-hint and
+  # recent-windows. niri 26.04 supports `include`.
   #
-  # Do not run Noctalia's assets/templates/niri/apply.sh: it edits config.kdl
-  # in place, and home-manager owns that file. This include line replaces it.
+  # Its apply.sh wants to add this include line to config.kdl, which
+  # home-manager owns read-only. In 5.1.0 it returns early when a matching
+  # include is already present, so declaring it here is what keeps apply.sh
+  # off that file. Re-check before bumping the noctalia input.
   kalliope.niri.extraConfig = ''
     include "noctalia.kdl"
   '';

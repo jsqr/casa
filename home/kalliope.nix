@@ -5,11 +5,95 @@ let
     inherit (pkgs.stdenv.hostPlatform) system;
     config.allowUnfree = true;
   };
-  c = import ../lib/kanagawa-dragon.nix;
+  k = import ../lib/kanagawa;
   # foot wants RRGGBB with no prefix; the palette stores #RRGGBB.
   hex = lib.removePrefix "#";
   # programs.firefox.configPath is relative to $HOME.
   xdgConfigRel = lib.removePrefix "${config.home.homeDirectory}/" config.xdg.configHome;
+
+  mode = config.casa.themeMode;
+
+  # foot reads its config only at startup, so both sections are always present
+  # and the switcher picks between them with a signal.
+  footColors = c: {
+    background = hex c.term.background;
+    foreground = hex c.term.foreground;
+
+    selection-foreground = hex c.term.selectionFg;
+    selection-background = hex c.term.selectionBg;
+
+    regular0 = hex c.term.black;
+    regular1 = hex c.term.red;
+    regular2 = hex c.term.green;
+    regular3 = hex c.term.yellow;
+    regular4 = hex c.term.blue;
+    regular5 = hex c.term.magenta;
+    regular6 = hex c.term.cyan;
+    regular7 = hex c.term.white;
+
+    bright0 = hex c.term.brightBlack;
+    bright1 = hex c.term.brightRed;
+    bright2 = hex c.term.brightGreen;
+    bright3 = hex c.term.brightYellow;
+    bright4 = hex c.term.brightBlue;
+    bright5 = hex c.term.brightMagenta;
+    bright6 = hex c.term.brightCyan;
+    bright7 = hex c.term.brightWhite;
+
+    "16" = hex c.term.extended0;
+    "17" = hex c.term.extended1;
+  };
+
+  zathuraOptions = c: {
+    font = "JuliaMono 10";
+    selection-clipboard = "clipboard";
+
+    default-bg = c.bg;
+    default-fg = c.fg;
+    statusbar-bg = c.bgP1;
+    statusbar-fg = c.fg;
+    inputbar-bg = c.bg;
+    inputbar-fg = c.fg;
+    notification-bg = c.bgP1;
+    notification-fg = c.fg;
+    notification-error-bg = c.bgP1;
+    notification-error-fg = c.red;
+    notification-warning-bg = c.bgP1;
+    notification-warning-fg = c.synIdentifier;
+    completion-bg = c.bgP1;
+    completion-fg = c.fg;
+    completion-highlight-bg = c.synFun;
+    completion-highlight-fg = c.bg;
+    index-bg = c.bg;
+    index-fg = c.fg;
+    index-active-bg = c.synFun;
+    index-active-fg = c.bg;
+    highlight-color = c.synIdentifier;
+    highlight-active-color = c.synFun;
+
+    # Only used when recolor is toggled with Ctrl+R; off by default, since
+    # for authoring you want the document as it will print.
+    recolor-lightcolor = c.bg;
+    recolor-darkcolor = c.fg;
+  };
+
+  # No trailing newline: the module adds one after extraConfig.
+  zathuraRc = c: lib.concatStringsSep "\n"
+    (lib.mapAttrsToList (n: v: "set ${n}\t\"${toString v}\"") (zathuraOptions c));
+
+  # No include directive and no reload, so the mode picks a config dir at launch.
+  # Already-open windows keep their colours.
+  zathuraCasa = pkgs.writeShellApplication {
+    name = "zathura-casa";
+    runtimeInputs = [ pkgs.coreutils ];
+    text = ''
+      dir=${config.xdg.configHome}/zathura
+      if [ "$(cat ${mode.stateFile} 2>/dev/null)" = light ]; then
+        dir=${config.xdg.configHome}/zathura-light
+      fi
+      exec ${config.programs.zathura.package}/bin/zathura --config-dir "$dir" "$@"
+    '';
+  };
 in
 {
   imports = [
@@ -45,6 +129,7 @@ in
     # GNOME Document Scanner; talks to the M426fdw over eSCL via sane-airscan.
     pkgs.simple-scan
     pkgs.signal-desktop
+    zathuraCasa
   ];
 
   # From programs.firefox, not home.packages, so the Proton Pass extension can
@@ -73,38 +158,45 @@ in
 
   programs.zathura = {
     enable = true;
-    options = {
-      font = "JuliaMono 10";
-      selection-clipboard = "clipboard";
+    # extraConfig, not options, so one renderer serves both modes.
+    extraConfig = zathuraRc k.dragon;
+  };
 
-      default-bg = c.bg;
-      default-fg = c.fg;
-      statusbar-bg = c.bgAlt;
-      statusbar-fg = c.fg;
-      inputbar-bg = c.bg;
-      inputbar-fg = c.fg;
-      notification-bg = c.bgAlt;
-      notification-fg = c.fg;
-      notification-error-bg = c.bgAlt;
-      notification-error-fg = c.urgent;
-      notification-warning-bg = c.bgAlt;
-      notification-warning-fg = c.warning;
-      completion-bg = c.bgAlt;
-      completion-fg = c.fg;
-      completion-highlight-bg = c.accent;
-      completion-highlight-fg = c.bg;
-      index-bg = c.bg;
-      index-fg = c.fg;
-      index-active-bg = c.accent;
-      index-active-fg = c.bg;
-      highlight-color = c.warning;
-      highlight-active-color = c.accent;
+  xdg.configFile."zathura-light/zathurarc".text = zathuraRc k.lotus + "\n";
 
-      # Only used when recolor is toggled with Ctrl+R; off by default, since
-      # for authoring you want the document as it will print.
-      recolor-lightcolor = c.bg;
-      recolor-darkcolor = c.fg;
+  # xdg.mimeApps names a desktop file; zathura's own runs the binary directly.
+  xdg.desktopEntries.zathura-casa = {
+    name = "Zathura (casa)";
+    genericName = "Document Viewer";
+    exec = "${lib.getExe zathuraCasa} %U";
+    terminal = false;
+    type = "Application";
+    mimeType = [ "application/pdf" ];
+    noDisplay = true;
+  };
+
+  casa.themeMode.reload = ''
+    # Signalling the server carries every current and future client.
+    case "$mode" in
+      dark) sig=USR1 ;;
+      light) sig=USR2 ;;
+    esac
+    ${pkgs.procps}/bin/pkill -"$sig" -x foot || true
+  '';
+
+  # The hook only fires on a change, so a session starting in the other mode
+  # would stay wrong until the next toggle.
+  systemd.user.services.casa-theme-mode = {
+    Unit = {
+      Description = "Apply the current theme mode to running applications";
+      After = [ config.wayland.systemd.target "foot.service" ];
+      PartOf = [ config.wayland.systemd.target ];
     };
+    Service = {
+      Type = "oneshot";
+      ExecStart = lib.getExe config.casa.themeMode.package;
+    };
+    Install.WantedBy = [ config.wayland.systemd.target ];
   };
 
   # Pins XDG_PICTURES_DIR at the photo subvolume. Without a user-dirs.dirs
@@ -132,7 +224,7 @@ in
   xdg.mimeApps = {
     enable = true;
     defaultApplications = {
-      "application/pdf" = "org.pwmt.zathura.desktop";
+      "application/pdf" = "zathura-casa.desktop";
       "text/plain" = "emacsclient.desktop";
       "text/html" = "firefox.desktop";
       "x-scheme-handler/http" = "firefox.desktop";
@@ -155,7 +247,8 @@ in
   programs.ghostty = {
     enable = true;
     settings = {
-      theme = "Kanagawa Dragon";
+      # theme (a light:/dark: pair) and the two theme files come from
+      # home/common.nix, shared with thalia.
       font-family = [ "JuliaMono" "FiraCode Nerd Font Mono" ];
       font-feature = [ "ss01" "zero" ];
       keybind = "shift+enter=text:\\x1b\\r";
@@ -174,40 +267,16 @@ in
       main = {
         font = "JuliaMono:size=9:fontfeatures=ss01:fontfeatures=zero, FiraCode Nerd Font Mono:size=9";
         term = "xterm-256color";
+        # Which of the two colour sections a fresh server starts on. The
+        # casa-theme-mode unit corrects it if the session began in the other
+        # mode, and from then on the signal keeps it right.
+        initial-color-theme = mode.default;
       };
 
       scrollback.lines = 10000;
 
-      # kanagawa dragon, from lib/kanagawa-dragon.nix. Mirrors upstream's
-      # extras/foot/kanagawa-dragon.ini.
-      colors-dark = {
-        background = hex c.bg;
-        foreground = hex c.fg;
-
-        selection-foreground = hex c.term.selectionFg;
-        selection-background = hex c.term.selectionBg;
-
-        regular0 = hex c.term.black;
-        regular1 = hex c.term.red;
-        regular2 = hex c.term.green;
-        regular3 = hex c.term.yellow;
-        regular4 = hex c.term.blue;
-        regular5 = hex c.term.magenta;
-        regular6 = hex c.term.cyan;
-        regular7 = hex c.term.white;
-
-        bright0 = hex c.term.brightBlack;
-        bright1 = hex c.term.brightRed;
-        bright2 = hex c.term.brightGreen;
-        bright3 = hex c.term.brightYellow;
-        bright4 = hex c.term.brightBlue;
-        bright5 = hex c.term.brightMagenta;
-        bright6 = hex c.term.brightCyan;
-        bright7 = hex c.term.brightWhite;
-
-        "16" = hex c.term.extended0;
-        "17" = hex c.term.extended1;
-      };
+      colors-dark = footColors k.dragon;
+      colors-light = footColors k.lotus;
 
       # sequence = key combination, in that order.
       text-bindings."\\x1b\\x0d" = "Shift+Return";
@@ -221,10 +290,10 @@ in
   # pgtk, not the default X11 build, for Wayland/Niri
   programs.emacs.package = pkgs.emacs-pgtk;
 
-  gtk = {
-    enable = true;
-    colorScheme = "dark";
-  };
+  # No colorScheme: it writes color-scheme='prefer-dark' into hm-dconf.ini and
+  # reapplies it on every activation, which would revert a runtime switch.
+  # Noctalia's gtk template owns that key instead -- see home/shells/noctalia.nix.
+  gtk.enable = true;
 
   programs.gh = {
     enable = true;

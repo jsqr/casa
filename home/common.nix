@@ -1,24 +1,291 @@
 { config, pkgs, lib, inputs, ... }:
 
 let
-  c = import ../lib/kanagawa-dragon.nix;
+  k = import ../lib/kanagawa;
 
-  # bat reads a tmTheme, which has no way to reference a palette. The template
-  # in dotfiles/bat carries @name@ placeholders for the top-level colours in
-  # lib/kanagawa-dragon.nix; fill them here so bat tracks the same values as
-  # everything else.
-  batTheme =
+  # role names come from lib/kanagawa, which takes them from upstream
+  variant = { dark = k.dragon; light = k.lotus; };
+  themeName = { dark = "Kanagawa Dragon"; light = "Kanagawa Lotus"; };
+  featureName = { dark = "kanagawa-dragon"; light = "kanagawa-lotus"; };
+
+  yamlFormat = pkgs.formats.yaml { };
+  tomlFormat = pkgs.formats.toml { };
+
+  roleStrings = lib.filterAttrs (_: v: lib.isString v);
+
+  # Two formats can't reference a palette: bat's tmTheme and Julia's startup.jl.
+  fillTemplate = src: subs:
     let
-      colours = lib.filterAttrs (_: v: lib.isString v) c;
       filled = builtins.replaceStrings
-        (map (n: "@${n}@") (builtins.attrNames colours))
-        (builtins.attrValues colours)
-        (builtins.readFile ../dotfiles/bat/kanagawa-dragon.tmTheme.in);
+        (map (n: "@${n}@") (builtins.attrNames subs))
+        (builtins.attrValues subs)
+        (builtins.readFile src);
       unfilled = lib.filter (l: builtins.match ".*@[a-zA-Z0-9]+@.*" l != null)
         (lib.splitString "\n" filled);
     in
     lib.throwIf (unfilled != [ ])
-      "bat theme: unfilled placeholders in ${toString unfilled}" filled;
+      "${builtins.baseNameOf src}: unfilled placeholders in ${toString unfilled}"
+      filled;
+
+  # darkSynComment, lightBg, ...; `f` adapts the value to the format.
+  prefixed = prefix: f: c: lib.mapAttrs'
+    (n: v: lib.nameValuePair
+      (prefix + lib.toUpper (builtins.substring 0 1 n)
+        + builtins.substring 1 (builtins.stringLength n) n)
+      (f v))
+    (roleStrings c);
+
+  batTheme = mode: fillTemplate ../dotfiles/bat/kanagawa.tmTheme.in
+    (roleStrings variant.${mode} // {
+      themeName = themeName.${mode};
+      themeClass = "theme.kanagawa.${if mode == "dark" then "dragon" else "lotus"}";
+      # syntect keys its theme cache on the uuid, so the two must differ.
+      uuid = if mode == "dark"
+        then "a9c43be948c5cabd56ef2bacffb77cdaa5ee"
+        else "b1d5cf0a37e6ab4ce8fa1cbdffa88de6b71f";
+    });
+
+  # ---- per-application colour, one function per app ------------------
+  # Roles are chosen so the dark rendering is identical to what we had before
+  # the role layer existed. Blame upstream for weird naming.
+
+  fzfColors = c: {
+    # bg/gutter = -1 keeps popups transparent to the terminal background.
+    "fg" = c.fg;
+    "bg" = "-1";
+    "hl" = c.red;
+    "fg+" = c.fg;
+    "bg+" = c.bgP1;
+    "hl+" = c.red;
+    "info" = c.synString;
+    "border" = c.nontext;
+    "prompt" = c.synFun;
+    "pointer" = c.red;
+    "marker" = c.brightGreen;
+    "spinner" = c.extendColor1;
+    "header" = c.synKeyword;
+    "gutter" = "-1";
+  };
+  fzfOpts = c: lib.concatStringsSep " "
+    (lib.mapAttrsToList (n: v: "--color=${n}:${v}") (fzfColors c));
+
+  atuinThemeName = { dark = "kanagawa-dragon"; light = "kanagawa-lotus"; };
+  atuinTheme = mode:
+    let c = variant.${mode}; in
+    {
+      theme.name = atuinThemeName.${mode};
+      colors = {
+        Base = c.fg;
+        Title = c.red;
+        Important = c.synConstant;
+        Guidance = c.synFun;
+        Annotation = c.synComment;
+        AlertInfo = c.synString;
+        AlertWarn = c.synIdentifier;
+        AlertError = c.red;
+      };
+    };
+  atuinSettings = mode: {
+    auto_sync = false;
+    update_check = false;
+    style = "compact";
+    inline_height = 20;
+    keymap_mode = "emacs";
+    filter_mode = "global";
+    filter_mode_shell_up_key_binding = "session";
+    theme.name = atuinThemeName.${mode};
+  };
+
+  # Omitted keys fall back to eza's defaults. The git columns use syntax roles,
+  # not vcs-*, so the dark rendering is unchanged.
+  ezaTheme = c: {
+    filekinds = {
+      normal.foreground = c.fg;
+      directory.foreground = c.synFun;
+      symlink.foreground = c.synType;
+      pipe.foreground = c.synComment;
+      block_device.foreground = c.synConstant;
+      char_device.foreground = c.synConstant;
+      socket.foreground = c.synComment;
+      special.foreground = c.synNumber;
+      executable.foreground = c.brightGreen;
+      mount_point.foreground = c.synFun;
+    };
+    perms = {
+      user_read.foreground = c.fg;
+      user_write.foreground = c.synIdentifier;
+      user_execute_file.foreground = c.brightGreen;
+      user_execute_other.foreground = c.brightGreen;
+      group_read.foreground = c.synParameter;
+      group_write.foreground = c.synIdentifier;
+      group_execute.foreground = c.brightGreen;
+      other_read.foreground = c.synComment;
+      other_write.foreground = c.synIdentifier;
+      other_execute.foreground = c.brightGreen;
+      special_user_file.foreground = c.synNumber;
+      special_other.foreground = c.synComment;
+      attribute.foreground = c.synComment;
+    };
+    size = {
+      major.foreground = c.fg;
+      minor.foreground = c.synType;
+      number_byte.foreground = c.fg;
+      number_kilo.foreground = c.fg;
+      number_mega.foreground = c.synFun;
+      number_giga.foreground = c.synNumber;
+      number_huge.foreground = c.synNumber;
+      unit_byte.foreground = c.synComment;
+      unit_kilo.foreground = c.synFun;
+      unit_mega.foreground = c.synFun;
+      unit_giga.foreground = c.synNumber;
+      unit_huge.foreground = c.synIdentifier;
+    };
+    users = {
+      user_you.foreground = c.fg;
+      user_root.foreground = c.red;
+      user_other.foreground = c.synNumber;
+      group_yours.foreground = c.synParameter;
+      group_other.foreground = c.synComment;
+      group_root.foreground = c.red;
+    };
+    links = {
+      normal.foreground = c.synType;
+      multi_link_file.foreground = c.synIdentifier;
+    };
+    git = {
+      new.foreground = c.brightGreen;
+      modified.foreground = c.synIdentifier;
+      deleted.foreground = c.red;
+      renamed.foreground = c.synType;
+      typechange.foreground = c.synNumber;
+      ignored.foreground = c.synComment;
+      conflicted.foreground = c.red;
+    };
+    git_repo = {
+      branch_main.foreground = c.fg;
+      branch_other.foreground = c.synNumber;
+      git_clean.foreground = c.brightGreen;
+      git_dirty.foreground = c.red;
+    };
+    punctuation.foreground = c.nontext;
+    date.foreground = c.synString;
+    inode.foreground = c.synComment;
+    header.foreground = c.synParameter;
+  };
+
+  # A delta feature per mode, selected by DELTA_FEATURES from the zsh precmd.
+  deltaFeature = mode:
+    let c = variant.${mode}; in
+    {
+      syntax-theme = themeName.${mode};
+
+      # Only tint the background, so highlighted text stays legible. diffText is
+      # upstream's within-line emphasis for both directions.
+      minus-style = ''syntax "${c.diffDelete}"'';
+      minus-non-emph-style = ''syntax "${c.diffDelete}"'';
+      minus-emph-style = ''syntax "${c.diffText}"'';
+      minus-empty-line-marker-style = ''normal "${c.diffDelete}"'';
+
+      plus-style = ''syntax "${c.diffAdd}"'';
+      plus-non-emph-style = ''syntax "${c.diffAdd}"'';
+      plus-emph-style = ''syntax "${c.diffText}"'';
+      plus-empty-line-marker-style = ''normal "${c.diffAdd}"'';
+
+      line-numbers-minus-style = c.red;
+      line-numbers-plus-style = c.brightGreen;
+      line-numbers-zero-style = c.nontext;
+      line-numbers-left-style = c.nontext;
+      line-numbers-right-style = c.nontext;
+      hunk-header-decoration-style = "${c.nontext} box";
+      hunk-header-file-style = c.synFun;
+      hunk-header-line-number-style = c.synIdentifier;
+      file-style = "${c.fg} bold";
+      file-decoration-style = "${c.nontext} ul";
+    };
+
+  # Server-global, so re-sourcing one file covers every session.
+  tmuxColors = c: ''
+    set -g pane-border-style "fg=${c.bgP2}"
+    set -g pane-active-border-style "fg=${c.red},bold"
+
+    set -g status-style "bg=${c.bg},fg=${c.synParameter}"
+    set -g status-left "#[fg=${c.red},bold] #S "
+    set -g status-right "#[fg=${c.synParameter}] %Y-%m-%d %H:%M "
+    setw -g window-status-current-style "fg=${c.red},bold"
+  '';
+
+  # Generated, not ghostty's own Kanagawa builtins: those differ from foot in
+  # the selection pair and carry no 16/17.
+  ghosttyTheme = c: ''
+    palette = 0=${c.term.black}
+    palette = 1=${c.term.red}
+    palette = 2=${c.term.green}
+    palette = 3=${c.term.yellow}
+    palette = 4=${c.term.blue}
+    palette = 5=${c.term.magenta}
+    palette = 6=${c.term.cyan}
+    palette = 7=${c.term.white}
+    palette = 8=${c.term.brightBlack}
+    palette = 9=${c.term.brightRed}
+    palette = 10=${c.term.brightGreen}
+    palette = 11=${c.term.brightYellow}
+    palette = 12=${c.term.brightBlue}
+    palette = 13=${c.term.brightMagenta}
+    palette = 14=${c.term.brightCyan}
+    palette = 15=${c.term.brightWhite}
+    palette = 16=${c.term.extended0}
+    palette = 17=${c.term.extended1}
+    background = ${c.term.background}
+    foreground = ${c.term.foreground}
+    cursor-color = ${c.term.cursor}
+    cursor-text = ${c.term.cursorText}
+    selection-background = ${c.term.selectionBg}
+    selection-foreground = ${c.term.selectionFg}
+  '';
+
+  # Both variants in one file, so a REPL can pick at startup.
+  juliaStartup = fillTemplate ../dotfiles/julia/startup.jl.in (
+    prefixed "dark" (lib.removePrefix "#") k.dragon
+    // prefixed "light" (lib.removePrefix "#") k.lotus
+    // {
+      stateFile = config.casa.themeMode.stateFile;
+      defaultMode = config.casa.themeMode.default;
+    });
+
+  # Read by jj/theme-mode in dotfiles/emacs.
+  emacsFaces = c: ''(
+      (tab-line              "${c.bgM3}" "${c.special}")
+      (tab-line-tab          "${c.bg}"   "${c.fg}")
+      (tab-line-tab-current  "${c.bg}"   "${c.fg}")
+      (tab-line-tab-inactive "${c.bgM3}" "${c.special}")
+      (tab-line-highlight    "${c.bgP1}" "${c.fg}"))'';
+
+  emacsKanagawa = pkgs.writeText "casa-kanagawa.el" ''
+    ;;; casa-kanagawa.el --- kanagawa data for both variants  -*- lexical-binding: t; -*-
+    ;;; Commentary:
+    ;; Generated by home/common.nix from lib/kanagawa. Carries the mode contract
+    ;; and the face values kanagawa-themes leaves unset. Do not edit.
+    ;;; Code:
+
+    (defconst casa-kanagawa-state-file "${config.casa.themeMode.stateFile}")
+    (defconst casa-kanagawa-default-mode '${config.casa.themeMode.default})
+
+    (defconst casa-kanagawa-themes
+      '((dark . kanagawa-dragon)
+        (light . kanagawa-lotus)))
+
+    ;; (face background foreground)
+    (defconst casa-kanagawa-faces
+      '((dark . ${emacsFaces k.dragon})
+        (light . ${emacsFaces k.lotus})))
+
+    (defconst casa-kanagawa-inlay-hint
+      '((dark . "${k.dragon.special}")
+        (light . "${k.lotus.special}")))
+
+    (provide 'casa-kanagawa)
+    ;;; casa-kanagawa.el ends here
+  '';
 
   unstable = import inputs.nixpkgs-unstable { inherit (pkgs.stdenv.hostPlatform) system; config.allowUnfree = true; };
 
@@ -48,7 +315,10 @@ let
     '';
 in
 {
-  imports = [ inputs.nix-index-database.homeModules.nix-index ];
+  imports = [
+    ./theme-mode.nix
+    inputs.nix-index-database.homeModules.nix-index
+  ];
 
   home.stateVersion = "24.11";
 
@@ -93,66 +363,33 @@ in
     options = "--delete-older-than 14d";
   };
 
-  programs.fzf = {
-    enable = true;
-    # Kanagawa Dragon. bg/gutter = -1 keeps popups transparent to the
-    # terminal background; accents (pointer/marker/prompt) use KD hues.
-    colors = {
-      "fg" = c.dragonWhite;
-      "bg" = "-1";
-      "hl" = c.dragonRed;
-      "fg+" = c.dragonWhite;
-      "bg+" = c.dragonBlack4;
-      "hl+" = c.dragonRed;
-      "info" = c.dragonGreen2;
-      "border" = c.dragonBlack6;
-      "prompt" = c.dragonBlue2;
-      "pointer" = c.dragonRed;
-      "marker" = c.dragonGreen;
-      "spinner" = c.dragonOrange;
-      "header" = c.dragonViolet;
-      "gutter" = "-1";
-    };
-  };
+  # No `colors`: that bakes one palette into FZF_DEFAULT_OPTS at login.
+  programs.fzf.enable = true;
   programs.zoxide.enable = true;
 
+  # The theme is set in config.toml with no env override, so light mode needs a
+  # whole config directory, named by ATUIN_CONFIG_DIR.
   programs.atuin = {
     enable = true;
     package = unstable.atuin;
     enableZshIntegration = true;
-    settings = {
-      auto_sync = false;
-      update_check = false;
-      style = "compact";
-      inline_height = 20;
-      keymap_mode = "emacs";
-      filter_mode = "global";
-      filter_mode_shell_up_key_binding = "session";
-      theme.name = "kanagawa-dragon";
-    };
-    # Kanagawa Dragon theme, written to ~/.config/atuin/themes/.
-    themes."kanagawa-dragon" = {
-      theme.name = "kanagawa-dragon";
-      colors = {
-        Base = c.dragonWhite;
-        Title = c.dragonRed;
-        Important = c.dragonOrange;
-        Guidance = c.dragonBlue2;
-        Annotation = c.dragonAsh;
-        AlertInfo = c.dragonGreen2;
-        AlertWarn = c.dragonYellow;
-        AlertError = c.dragonRed;
-      };
-    };
+    settings = atuinSettings "dark";
+    themes.${atuinThemeName.dark} = atuinTheme "dark";
   };
 
   programs.bat = {
     enable = true;
+    # No `theme`: the default, auto, detects the terminal's own background, so
+    # this is right over ssh too. BAT_THEME pins it where the mode is known.
     config = {
-      theme = "Kanagawa Dragon";
+      theme-dark = themeName.dark;
+      theme-light = themeName.light;
     };
     # delta and bat read the same theme DB.
-    themes."Kanagawa Dragon".src = pkgs.writeText "kanagawa-dragon.tmTheme" batTheme;
+    themes = {
+      ${themeName.dark}.src = pkgs.writeText "kanagawa-dragon.tmTheme" (batTheme "dark");
+      ${themeName.light}.src = pkgs.writeText "kanagawa-lotus.tmTheme" (batTheme "light");
+    };
   };
 
   programs.eza = {
@@ -160,82 +397,7 @@ in
     enableZshIntegration = true;
     git = true;
     # No icons: JuliaMono carries no Nerd Font glyphs.
-    # Kanagawa Dragon, written to ~/.config/eza/theme.yml. Omitted keys fall
-    # back to eza's built-in defaults; only foregrounds are pinned to KD hues.
-    theme = {
-      filekinds = {
-        normal.foreground = c.dragonWhite;
-        directory.foreground = c.dragonBlue2;
-        symlink.foreground = c.dragonAqua;
-        pipe.foreground = c.dragonAsh;
-        block_device.foreground = c.dragonOrange;
-        char_device.foreground = c.dragonOrange;
-        socket.foreground = c.dragonAsh;
-        special.foreground = c.dragonPink;
-        executable.foreground = c.dragonGreen;
-        mount_point.foreground = c.dragonBlue2;
-      };
-      perms = {
-        user_read.foreground = c.dragonWhite;
-        user_write.foreground = c.dragonYellow;
-        user_execute_file.foreground = c.dragonGreen;
-        user_execute_other.foreground = c.dragonGreen;
-        group_read.foreground = c.dragonGray;
-        group_write.foreground = c.dragonYellow;
-        group_execute.foreground = c.dragonGreen;
-        other_read.foreground = c.dragonAsh;
-        other_write.foreground = c.dragonYellow;
-        other_execute.foreground = c.dragonGreen;
-        special_user_file.foreground = c.dragonPink;
-        special_other.foreground = c.dragonAsh;
-        attribute.foreground = c.dragonAsh;
-      };
-      size = {
-        major.foreground = c.dragonWhite;
-        minor.foreground = c.dragonAqua;
-        number_byte.foreground = c.dragonWhite;
-        number_kilo.foreground = c.dragonWhite;
-        number_mega.foreground = c.dragonBlue2;
-        number_giga.foreground = c.dragonPink;
-        number_huge.foreground = c.dragonPink;
-        unit_byte.foreground = c.dragonAsh;
-        unit_kilo.foreground = c.dragonBlue2;
-        unit_mega.foreground = c.dragonBlue2;
-        unit_giga.foreground = c.dragonPink;
-        unit_huge.foreground = c.dragonYellow;
-      };
-      users = {
-        user_you.foreground = c.dragonWhite;
-        user_root.foreground = c.dragonRed;
-        user_other.foreground = c.dragonPink;
-        group_yours.foreground = c.dragonGray;
-        group_other.foreground = c.dragonAsh;
-        group_root.foreground = c.dragonRed;
-      };
-      links = {
-        normal.foreground = c.dragonAqua;
-        multi_link_file.foreground = c.dragonYellow;
-      };
-      git = {
-        new.foreground = c.dragonGreen;
-        modified.foreground = c.dragonYellow;
-        deleted.foreground = c.dragonRed;
-        renamed.foreground = c.dragonAqua;
-        typechange.foreground = c.dragonPink;
-        ignored.foreground = c.dragonAsh;
-        conflicted.foreground = c.dragonRed;
-      };
-      git_repo = {
-        branch_main.foreground = c.dragonWhite;
-        branch_other.foreground = c.dragonPink;
-        git_clean.foreground = c.dragonGreen;
-        git_dirty.foreground = c.dragonRed;
-      };
-      punctuation.foreground = c.dragonBlack6;
-      date.foreground = c.dragonGreen2;
-      inode.foreground = c.dragonAsh;
-      header.foreground = c.dragonGray;
-    };
+    # No `theme`: it writes one palette to a fixed path. See EZA_CONFIG_DIR.
   };
 
   programs.emacs = {
@@ -337,31 +499,11 @@ in
       navigate = true;
       line-numbers = true;
       side-by-side = true;
-      syntax-theme = "Kanagawa Dragon";
 
-      # keep syntax-highlighted text; only tint the background so
-      # added/removed lines stay legible under Kanagawa Dragon.
-      minus-style = ''syntax "${c.diff.delete}"'';
-      minus-non-emph-style = ''syntax "${c.diff.delete}"'';
-      minus-emph-style = ''syntax "${c.diff.deleteEmph}"'';
-      minus-empty-line-marker-style = ''normal "${c.diff.delete}"'';
-
-      plus-style = ''syntax "${c.diff.add}"'';
-      plus-non-emph-style = ''syntax "${c.diff.add}"'';
-      plus-emph-style = ''syntax "${c.diff.addEmph}"'';
-      plus-empty-line-marker-style = ''normal "${c.diff.add}"'';
-
-      # muted grays/blues for gutter + hunk headers (KD-native)
-      line-numbers-minus-style = c.dragonRed;
-      line-numbers-plus-style = c.dragonGreen;
-      line-numbers-zero-style = c.dragonBlack6;
-      line-numbers-left-style = c.dragonBlack6;
-      line-numbers-right-style = c.dragonBlack6;
-      hunk-header-decoration-style = "${c.dragonBlack6} box";
-      hunk-header-file-style = c.dragonBlue2;
-      hunk-header-line-number-style = c.dragonYellow;
-      file-style = "${c.dragonWhite} bold";
-      file-decoration-style = "${c.dragonBlack6} ul";
+      # Fallback for a git run outside a themed shell; DELTA_FEATURES wins.
+      features = featureName.${config.casa.themeMode.default};
+      ${featureName.dark} = deltaFeature "dark";
+      ${featureName.light} = deltaFeature "light";
     };
   };
 
@@ -390,7 +532,7 @@ in
 
   home.file.".gitignore".source = ../dotfiles/gitignore;
   home.file.".emacs".source = ../dotfiles/emacs;
-  home.file.".julia/config/startup.jl".source = ../dotfiles/julia/startup.jl;
+  home.file.".julia/config/startup.jl".text = juliaStartup;
   home.file.".emacs.d/tree-sitter".source = "${emacsTreesitGrammars}/lib";
 
   # Launch terminal Emacs with TERM=tmux-direct so doom-gruvbox renders in real
@@ -427,8 +569,66 @@ in
     executable = true;
   };
 
-  xdg.configFile."zsh/themes/jsqr.zsh-theme".source =
-    ../dotfiles/zsh/themes/jsqr.zsh-theme;
+  xdg.configFile = {
+    "zsh/themes/jsqr.zsh-theme".source = ../dotfiles/zsh/themes/jsqr.zsh-theme;
+
+    "eza-dark/theme.yml".source =
+      yamlFormat.generate "eza-theme-dark.yml" (ezaTheme k.dragon);
+    "eza-light/theme.yml".source =
+      yamlFormat.generate "eza-theme-light.yml" (ezaTheme k.lotus);
+
+    "tmux/kanagawa-dark.conf".text = tmuxColors k.dragon;
+    "tmux/kanagawa-light.conf".text = tmuxColors k.lotus;
+
+    # programs.atuin above writes the dark equivalents into its own directory.
+    "atuin-light/config.toml".source =
+      tomlFormat.generate "atuin-light-config.toml" (atuinSettings "light");
+    "atuin-light/themes/${atuinThemeName.light}.toml".source =
+      tomlFormat.generate "atuin-lotus.toml" (atuinTheme "light");
+  } // lib.optionalAttrs config.programs.ghostty.enable {
+    "ghostty/themes/kanagawa-dragon".text = ghosttyTheme k.dragon;
+    "ghostty/themes/kanagawa-lotus".text = ghosttyTheme k.lotus;
+  };
+
+  # Set here rather than per host so kalliope and thalia cannot drift; the
+  # module is inert on melpomene, which does not enable ghostty.
+  programs.ghostty.settings.theme = "light:kanagawa-lotus,dark:kanagawa-dragon";
+
+  # Not on the default load-path, so dotfiles/emacs adds this directory.
+  home.file.".emacs.d/casa/casa-kanagawa.el".source = emacsKanagawa;
+
+  casa.themeMode.env = {
+    dark = {
+      BAT_THEME = themeName.dark;
+      DELTA_FEATURES = featureName.dark;
+      EZA_CONFIG_DIR = "${config.xdg.configHome}/eza-dark";
+      ATUIN_CONFIG_DIR = config.xdg.configHome + "/atuin";
+      FZF_DEFAULT_OPTS = fzfOpts k.dragon;
+    };
+    light = {
+      BAT_THEME = themeName.light;
+      DELTA_FEATURES = featureName.light;
+      EZA_CONFIG_DIR = "${config.xdg.configHome}/eza-light";
+      ATUIN_CONFIG_DIR = "${config.xdg.configHome}/atuin-light";
+      FZF_DEFAULT_OPTS = fzfOpts k.lotus;
+    };
+  };
+
+  casa.themeMode.reload = ''
+    # tmux holds these as server-global options, so one source-file covers every
+    # session and pane.
+    tmux=${config.programs.tmux.package}/bin/tmux
+    if "$tmux" list-sessions >/dev/null 2>&1; then
+      "$tmux" source-file "${config.xdg.configHome}/tmux/kanagawa-$mode.conf" || true
+    fi
+
+    # The daemon owns the theme and every frame repaints. With no daemon there
+    # is nothing to do: the next one reads the state file as it starts.
+    emacsclient=${config.programs.emacs.finalPackage}/bin/emacsclient
+    if "$emacsclient" --eval t >/dev/null 2>&1; then
+      "$emacsclient" --eval "(jj/theme-mode '$mode)" >/dev/null 2>&1 || true
+    fi
+  '';
 
   programs.tmux = {
     enable = true;
@@ -455,24 +655,20 @@ in
       set -g renumber-windows on
       set -g set-clipboard on
 
-      # Kanagawa Dragon: dim border dragonBlack5, active accent dragonRed;
-      # was colour238/colour166 (gruvbox era).
-      set -g pane-border-style "fg=${c.dragonBlack5}"
-      set -g pane-active-border-style "fg=${c.dragonRed},bold"
       set -g pane-border-indicators arrows
 
       bind | split-window -h -c "#{pane_current_path}"
       bind - split-window -v -c "#{pane_current_path}"
       bind c new-window -c "#{pane_current_path}"
 
-      # Kanagawa Dragon: status bg dragonBlack3, fg dragonGray.
-      set -g status-style "bg=${c.dragonBlack3},fg=${c.dragonGray}"
-      set -g status-left "#[fg=${c.dragonRed},bold] #S "
-      set -g status-right "#[fg=${c.dragonGray}] %Y-%m-%d %H:%M "
       set -g status-left-length 20
-      setw -g window-status-current-style "fg=${c.dragonRed},bold"
       setw -g window-status-current-format " #I:#W "
       setw -g window-status-format " #I:#W "
+
+      # Colour lives in the two generated files below, one per mode, which the
+      # switcher re-sources in place. if-shell chooses the initial one, since
+      # the server can start before any shell has read the state file.
+      if-shell '[ "$(cat ${config.casa.themeMode.stateFile} 2>/dev/null)" = light ]' 'source-file ${config.xdg.configHome}/tmux/kanagawa-light.conf' 'source-file ${config.xdg.configHome}/tmux/kanagawa-dark.conf'
     '';
   };
 }

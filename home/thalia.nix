@@ -49,9 +49,8 @@ in
     enable = true;
     package = null;
     settings = {
-      # theme = "Monokai Pro";
-      # theme = "Gruvbox Dark Hard";  # hard = darker bg (#1d2021)
-      theme = "Kanagawa Dragon";
+      # theme (a light:/dark: pair, which ghostty resolves against the macOS
+      # appearance) and the two theme files come from home/common.nix.
       # JuliaMono has no Nerd glyphs; Fira Code (brew cask) is the fallback
       font-family = [ "JuliaMono" "FiraCode Nerd Font Mono" ];
       # ss01 = single-story g, zero = slashed zero
@@ -60,6 +59,24 @@ in
       shell-integration-features = "ssh-env,ssh-terminfo";
       clipboard-write = "allow";
       term = "xterm-256color";
+    };
+  };
+
+  # macOS has no Noctalia to hang the theme switch off. dark-mode-notify
+  # registers for AppleInterfaceThemeChangedNotification, so this is
+  # event-driven rather than a poll, and it runs the command once at startup and
+  # on wake -- which is what gets a fresh login into the right mode.
+  launchd.agents.dark-mode-notify = {
+    enable = true;
+    config = {
+      ProgramArguments = [
+        "${lib.getExe pkgs.dark-mode-notify}"
+        "${lib.getExe config.casa.themeMode.package}"
+      ];
+      RunAtLoad = true;
+      KeepAlive = true;
+      StandardOutPath = "${config.home.homeDirectory}/Library/Logs/dark-mode-notify.log";
+      StandardErrorPath = "${config.home.homeDirectory}/Library/Logs/dark-mode-notify.log";
     };
   };
 

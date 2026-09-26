@@ -1,0 +1,136 @@
+# ~/.julia/config/startup.jl -- runs at the start of every Julia process.
+#
+# home/common.nix fills the dark* and light* placeholders from lib/kanagawa.
+# Both variants are written out because Highlights.jl's S"..." needs a literal.
+#
+# Deployed by Nix, but the packages are managed by the global Pkg environment
+# (~/.julia/environments/v#.#), not Nix. Provision them with:
+#
+#   julia> import Pkg; Pkg.add(["Revise", "OhMyREPL", "BenchmarkTools"])
+
+try
+    using Revise
+catch
+    @warn "startup.jl: Revise not installed -- skipping"
+end
+
+# Read once per process: a REPL keeps the colours it started with.
+const CASA_THEME_MODE = try
+    let m = strip(read("@stateFile@", String))
+        m in ("dark", "light") ? m : "@defaultMode@"
+    end
+catch
+    "@defaultMode@"
+end
+
+# REPL-only: skip for scripts, `julia -e`, and test workers
+if isinteractive()
+    try
+        using OhMyREPL
+        import OhMyREPL.Passes.SyntaxHighlighter as SH
+        let C = SH.Crayons.Crayon
+            dragon = SH.ColorScheme()
+            SH.text!(dragon,         C(foreground = 0x@darkFg@))
+            SH.comment!(dragon,      C(foreground = 0x@darkSynComment@))
+            SH.string!(dragon,       C(foreground = 0x@darkSynString@))
+            SH.keyword!(dragon,      C(foreground = 0x@darkSynKeyword@))
+            SH.number!(dragon,       C(foreground = 0x@darkSynNumber@))
+            SH.function_def!(dragon, C(foreground = 0x@darkSynFun@))
+            SH.call!(dragon,         C(foreground = 0x@darkSynFun@))
+            SH.op!(dragon,           C(foreground = 0x@darkSynOperator@))
+            SH.macro!(dragon,        C(foreground = 0x@darkSynPreproc@))
+            SH.symbol!(dragon,       C(foreground = 0x@darkSynIdentifier@))
+            SH.argdef!(dragon,       C(foreground = 0x@darkSynParameter@))
+            SH.error!(dragon,        C(foreground = :default, background = :light_red))
+            SH.add!("KanagawaDragon", dragon)
+
+            lotus = SH.ColorScheme()
+            SH.text!(lotus,         C(foreground = 0x@lightFg@))
+            SH.comment!(lotus,      C(foreground = 0x@lightSynComment@))
+            SH.string!(lotus,       C(foreground = 0x@lightSynString@))
+            SH.keyword!(lotus,      C(foreground = 0x@lightSynKeyword@))
+            SH.number!(lotus,       C(foreground = 0x@lightSynNumber@))
+            SH.function_def!(lotus, C(foreground = 0x@lightSynFun@))
+            SH.call!(lotus,         C(foreground = 0x@lightSynFun@))
+            SH.op!(lotus,           C(foreground = 0x@lightSynOperator@))
+            SH.macro!(lotus,        C(foreground = 0x@lightSynPreproc@))
+            SH.symbol!(lotus,       C(foreground = 0x@lightSynIdentifier@))
+            SH.argdef!(lotus,       C(foreground = 0x@lightSynParameter@))
+            SH.error!(lotus,        C(foreground = :default, background = :light_red))
+            SH.add!("KanagawaLotus", lotus)
+        end
+        OhMyREPL.colorscheme!(
+            CASA_THEME_MODE == "light" ? "KanagawaLotus" : "KanagawaDragon")
+    catch
+        @warn "startup.jl: OhMyREPL not available -- skipping theme"
+    end
+
+    try
+        using BenchmarkTools
+    catch
+        @warn "startup.jl: BenchmarkTools not installed -- skipping"
+    end
+
+    # Debugger.jl colors its source listing via Highlights.jl (not OhMyREPL),
+    # defaulting to a bright Monokai theme. Re-theme when Debugger loads -- it's
+    # pulled in per-project, not at startup.
+    push!(Base.package_callbacks, function (pkg)
+        pkg.name == "Debugger" || return
+        try
+            # Split eval: the `using` must run before the @theme/S"" macros below
+            # are expanded, so they can't share one block.
+            @eval using Debugger, Debugger.Highlights.Themes, Debugger.Highlights.Tokens
+            @eval begin
+                abstract type KanagawaDragonTheme <: AbstractTheme end
+                @theme KanagawaDragonTheme Dict(
+                    :name   => "KanagawaDragon",
+                    :style  => S"",
+                    :tokens => Dict(
+                        COMMENT           => S"fg: @darkSynComment@",
+                        KEYWORD           => S"fg: @darkSynKeyword@",
+                        KEYWORD_NAMESPACE => S"fg: @darkSynPreproc@",
+                        KEYWORD_TYPE      => S"fg: @darkSynType@",
+                        OPERATOR          => S"fg: @darkSynOperator@",
+                        NAME_FUNCTION     => S"fg: @darkSynFun@",
+                        NAME_CLASS        => S"fg: @darkSynFun@",
+                        NAME_DECORATOR    => S"fg: @darkSynPreproc@",
+                        NAME_CONSTANT     => S"fg: @darkSynConstant@",
+                        NUMBER            => S"fg: @darkSynNumber@",
+                        LITERAL           => S"fg: @darkSynNumber@",
+                        STRING            => S"fg: @darkSynString@",
+                        STRING_ESCAPE     => S"fg: @darkSynNumber@",
+                        ERROR             => S"fg: @darkRed@",
+                    )
+                )
+
+                abstract type KanagawaLotusTheme <: AbstractTheme end
+                @theme KanagawaLotusTheme Dict(
+                    :name   => "KanagawaLotus",
+                    :style  => S"",
+                    :tokens => Dict(
+                        COMMENT           => S"fg: @lightSynComment@",
+                        KEYWORD           => S"fg: @lightSynKeyword@",
+                        KEYWORD_NAMESPACE => S"fg: @lightSynPreproc@",
+                        KEYWORD_TYPE      => S"fg: @lightSynType@",
+                        OPERATOR          => S"fg: @lightSynOperator@",
+                        NAME_FUNCTION     => S"fg: @lightSynFun@",
+                        NAME_CLASS        => S"fg: @lightSynFun@",
+                        NAME_DECORATOR    => S"fg: @lightSynPreproc@",
+                        NAME_CONSTANT     => S"fg: @lightSynConstant@",
+                        NUMBER            => S"fg: @lightSynNumber@",
+                        LITERAL           => S"fg: @lightSynNumber@",
+                        STRING            => S"fg: @lightSynString@",
+                        STRING_ESCAPE     => S"fg: @lightSynNumber@",
+                        ERROR             => S"fg: @lightRed@",
+                    )
+                )
+
+                Debugger.set_theme(
+                    CASA_THEME_MODE == "light" ? KanagawaLotusTheme : KanagawaDragonTheme)
+                Debugger.set_highlight(Debugger.HIGHLIGHT_24_BIT)
+            end
+        catch e
+            @warn "startup.jl: failed to theme Debugger" exception = e
+        end
+    end)
+end

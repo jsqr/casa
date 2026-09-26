@@ -38,7 +38,7 @@ setopt prompt_subst
 # Check the UID
 if [[ $UID -ne 0 ]]; then # normal user
   PR_USER='%F{green}%n%f'
-  PR_PROMPT='%F{245}⊳%f '
+  PR_PROMPT='%F{8}⊳%f '
 else # root
   PR_USER='%F{red}%n%f'
   PR_PROMPT='%F{red}⊳ %f'
@@ -59,11 +59,11 @@ _jsqr_precmd() {
 add-zsh-hook precmd _jsqr_precmd
 
 prompt_line() {
-  print -rn -- '%F{245}─────⭘%f'
+  print -rn -- '%F{8}─────⭘%f'
 }
 
-PROMPT='%F{245}╭─%f${_JSQR_VENV_INFO}${PR_USER}%F{cyan}@${PR_HOST} %B%F{blue}%~%f%b ${_JSQR_GIT_INFO}$(prompt_line)
-%F{245}╰─%f${PR_PROMPT}'
+PROMPT='%F{8}╭─%f${_JSQR_VENV_INFO}${PR_USER}%F{cyan}@${PR_HOST} %B%F{blue}%~%f%b ${_JSQR_GIT_INFO}$(prompt_line)
+%F{8}╰─%f${PR_PROMPT}'
 RPROMPT='%(?..%F{red}%? ↵%f)'
 
 ZSH_THEME_VIRTUALENV_PREFIX="%F{red}("
