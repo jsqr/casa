@@ -5,8 +5,9 @@
 # aarch64-darwin. Forcing the drvPath still catches every type error,
 # unknown option and bad interpolation (just not a compile failure).
 #
-# The generation recipes act on the running system, so they refuse to run
-# anywhere but NixOS.
+# `switch` acts on the running system: nixos-rebuild on NixOS,
+# home-manager elsewhere. The other generation recipes are nixos-rebuild
+# only and refuse to run anywhere but NixOS.
 
 nix_system := arch() + "-" + if os() == "macos" { "darwin" } else { os() }
 
@@ -53,8 +54,18 @@ diff: (_nixos "diff")
     nix build --no-link --print-out-paths .#nixosConfigurations.$(hostname -s).config.system.build.toplevel \
       | xargs -I {} nix store diff-closures /run/current-system {}
 
-# Switch the running system to this checkout; refuse if a mount or systemd changed
-switch: (_nixos "switch")
+# Switch this host to this checkout
+switch:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ -e /etc/NIXOS ]; then
+        just _switch-nixos
+    else
+        just _switch-home
+    fi
+
+# Switch the running system; refuse if a mount or systemd changed
+_switch-nixos:
     #!/usr/bin/env bash
     set -euo pipefail
     host=$(hostname -s)
@@ -70,6 +81,11 @@ switch: (_nixos "switch")
         exit 1
     fi
     sudo nixos-rebuild switch --flake ".#$host" 2>&1 | tee /tmp/switch.log
+
+# Activate the home-manager generation for this user. -b backup moves a
+# colliding unmanaged file to <name>.backup instead of aborting activation.
+_switch-home:
+    home-manager switch -b backup --flake .#$(hostname -s) 2>&1 | tee /tmp/switch.log
 
 # Stage this checkout for the next boot; the safe path for fileSystems changes
 stage: (_nixos "stage")
