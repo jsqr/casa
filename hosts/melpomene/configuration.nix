@@ -187,25 +187,14 @@ in
   services.llama-cpp = {
     enable = true;
 
-    # Router LRU cap. 4 of the 5 presets, so ask --local (gemma-4-E4B)
-    # cannot evict the embedding model this box serves. The chat models
-    # release their weights on sleep-idle-seconds, so this is not 4
-    # models' worth of resident RAM.
+    # Router LRU cap. 4 of the 5 presets: both embedders plus two chat
+    # models. Everything but the 0.6B embedder releases its weights on
+    # sleep-idle-seconds, so this is not 4 models' worth of resident RAM.
     extraFlags = [ "--models-max" "4" ];
 
-    # The shared pair (E4B for ask --local, embeddinggemma for new
-    # projects) is in lib/llama-presets.nix. The three below are this
-    # host's own and unchanged.
+    # E4B (for ask --local) and the two Qwen3 embedders are in
+    # lib/llama-presets.nix. The two below are this host's own.
     modelsPreset = (import ../../lib/llama-presets.nix) // {
-      "Qwen3-Embedding-8B" = {
-        hf-repo = "Qwen/Qwen3-Embedding-8B-GGUF";
-        hf-file = "Qwen3-Embedding-8B-Q5_K_M.gguf";
-        alias = "Qwen/Qwen3-Embedding-8B";
-        embedding = "true";
-        pooling = "last";
-        ctx-size = "4096";
-      };
-
       # MoE chat models; 3-4B params are active per token
       # UD-Q4_K_XL is unsloth's dynamic 4-bit (important layers upcast to
       # 8/16-bit). jinja = "on" uses each model's built-in chat template.

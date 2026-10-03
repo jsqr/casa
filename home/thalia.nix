@@ -34,7 +34,7 @@ in
         "--models-preset"
         "${llamaPresets}"
         "--models-max"
-        "2"
+        "3"
       ];
       EnvironmentVariables.LLAMA_CACHE =
         "${config.home.homeDirectory}/Library/Caches/llama.cpp";

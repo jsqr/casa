@@ -179,12 +179,13 @@ in
   services.llama-cpp = {
     enable = true;
 
-    # Router LRU cap, as on melpomene. No -ngl: --fit sizes offload to the
-    # Vulkan heap, which is shared system RAM here.
-    extraFlags = [ "--models-max" "2" ];
+    # Router LRU cap, as on melpomene: 3 of the 4 presets, so both embedders
+    # and one chat model fit. No -ngl: --fit sizes offload to the Vulkan
+    # heap, which is shared system RAM here.
+    extraFlags = [ "--models-max" "3" ];
 
-    # Preset keys are long CLI flags minus the dashes. The shared pair
-    # (E4B, embeddinggemma) is in lib/llama-presets.nix; the 12B is local.
+    # Preset keys are long CLI flags minus the dashes. E4B and the two Qwen3
+    # embedders are in lib/llama-presets.nix; the 12B is local.
     modelsPreset = (import ../../lib/llama-presets.nix) // {
       "gemma-4-12B" = {
         hf-repo = "unsloth/gemma-4-12B-it-qat-GGUF";

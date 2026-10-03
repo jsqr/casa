@@ -1,5 +1,5 @@
 # llama-server model presets shared by every host: the chat model
-# scripts/ask.py asks for with --local, and the embedding model.
+# scripts/ask.py asks for with --local, and two Qwen3 embedders.
 #
 # Keys are long llama-server flags without the dashes. Nothing here may be
 # newer than b9190 (nixos-26.05), which melpomene and thalia run — kalliope
@@ -18,14 +18,30 @@
     sleep-idle-seconds = "600";
   };
 
-  # ~330 MB, small enough to keep resident. Pooling comes from the GGUF
-  # metadata; ctx-size is the model's maximum.
-  "embeddinggemma-300m" = {
-    hf-repo = "ggml-org/embeddinggemma-300m-qat-q8_0-GGUF";
-    hf-file = "embeddinggemma-300m-qat-Q8_0.gguf";
-    alias = "google/embeddinggemma-300m";
+  # Embedders. An embedding input must fit in one ubatch (default 512), so
+  # the batch sizes match ctx-size. Pooling is last-token, per the model card.
+  "Qwen3-Embedding-8B" = {
+    hf-repo = "Qwen/Qwen3-Embedding-8B-GGUF";
+    hf-file = "Qwen3-Embedding-8B-Q8_0.gguf";
+    alias = "Qwen/Qwen3-Embedding-8B";
     embedding = "true";
-    ctx-size = "2048";
+    pooling = "last";
+    ctx-size = "8192";
+    batch-size = "8192";
+    ubatch-size = "8192";
+    sleep-idle-seconds = "600";
+  };
+
+  # ~0.6 GB, small enough to keep resident.
+  "Qwen3-Embedding-0.6B" = {
+    hf-repo = "Qwen/Qwen3-Embedding-0.6B-GGUF";
+    hf-file = "Qwen3-Embedding-0.6B-Q8_0.gguf";
+    alias = "Qwen/Qwen3-Embedding-0.6B";
+    embedding = "true";
+    pooling = "last";
+    ctx-size = "8192";
+    batch-size = "8192";
+    ubatch-size = "8192";
     load-on-startup = "true";
   };
 }
