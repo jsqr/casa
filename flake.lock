@@ -3,11 +3,11 @@
     "ashokan": {
       "flake": false,
       "locked": {
-        "lastModified": 1790260676,
-        "narHash": "sha256-+G7lcMbvo+nqoyrKqJh1TwWtyLiBjuvklUGMalap1RU=",
+        "lastModified": 1791044161,
+        "narHash": "sha256-sqDZvOpDHXHJgmIgguXJ7TPUUt3Urvv8wlWc0Fz14AQ=",
         "ref": "main",
-        "rev": "5057190eec022d7b35358a197c615718462a13ff",
-        "revCount": 46,
+        "rev": "22055898972d9e167b6954f76d9f78e0e2ecf589",
+        "revCount": 47,
         "type": "git",
         "url": "ssh://git@github.com/jsqr/ashokan.git"
       },
@@ -149,11 +149,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1791026167,
-        "narHash": "sha256-2jUi2RuZ1rsEjGUA33V5hNWkThKiPg+v7RPKE2N0nkI=",
+        "lastModified": 1791048152,
+        "narHash": "sha256-R+cq28uDVDRY//7BjWXh/oKGv+yIrDsuFJJX9H41yEo=",
         "owner": "noctalia-dev",
         "repo": "noctalia",
-        "rev": "064476d48818896ef0dd93f42ccb632dd8f52c55",
+        "rev": "e639a87e811ad3268c73f6d5e77669c94184ba15",
         "type": "github"
       },
       "original": {
