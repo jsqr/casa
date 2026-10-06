@@ -61,9 +61,12 @@ if [[ "$PLATFORM" == darwin ]]; then
 else
     # `just switch`, not nixos-rebuild directly: that recipe has a check for
     # when the new fstab differs
+  # The switch can restart wpa_supplicant; Wi-Fi takes ~10s to come back,
+  # longer than uv's retries last.
   build_step() {
     ( cd "$FLAKE" && git merge --ff-only '@{u}' && nix flake update ) \
-      && ( cd "$FLAKE" && just switch )
+      && ( cd "$FLAKE" && just switch ) \
+      && nm-online -q -t 30
   }
 fi
 
