@@ -3,13 +3,107 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Groundloop</title>
+  <meta name="color-scheme" content="dark">
+  <title>Ground Loop</title>
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 4rem auto; padding: 0 1rem; line-height: 1.5; }
+    /* Junicode: SIL Open Font License; see Junicode-OFL.txt. */
+    @font-face {
+      font-family: "Junicode";
+      src: url("Junicode-Roman-latin.woff2") format("woff2");
+      font-weight: 400 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root {
+      /* Kanagawa Dragon */
+      --bg: #181616;
+      --fg: #c5c9c5;
+      --fg-bright: #dcd7ba;
+      --border: #625e5a;
+      --red: #c4746e;
+      --blue: #8ba4b0;
+      --serif: "Junicode", "Iowan Old Style", "Palatino Linotype", "Book Antiqua",
+               Palatino, "URW Palladio L", "P052", "Georgia", serif;
+    }
+
+    html {
+      background-color: var(--bg);
+      color: var(--fg);
+      font-family: var(--serif);
+      font-size: 1.2em;
+      line-height: 1.5;
+    }
+
+    body {
+      margin: 0;
+      padding: 0 16px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+      padding: 3rem 0;
+    }
+
+    main img {
+      width: min(28rem, 80vw);
+      height: auto;
+    }
+
+    .soon {
+      margin: 0;
+      color: var(--fg-bright);
+      font-size: 1.4em;
+      letter-spacing: 0.08em;
+    }
+
+    footer {
+      max-width: 40rem;
+      padding: 1rem 0 2rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.75em;
+      text-align: center;
+      opacity: 0.8;
+    }
+
+    footer p {
+      margin: 0.5em 0;
+    }
+
+    a {
+      color: var(--blue);
+    }
+
+    a:hover {
+      color: var(--red);
+    }
   </style>
 </head>
 <body>
-  <h1>Groundloop</h1>
-  <p>Under construction.</p>
+  <main>
+    <img src="logo.svg" alt="Ground Loop">
+    <p class="soon">Coming soon</p>
+  </main>
+  <footer>
+    <p>
+      Ground Loop LLC is a New York professional service limited liability company.<br>
+      157 Columbus Ave, 4th Floor, New York, NY 10023 &middot;
+      <a href="mailto:jj@groundloop.law">jj@groundloop.law</a>
+    </p>
+    <p>
+      This site is for general information only and is not legal advice.
+      Viewing it or contacting us does not create an attorney-client relationship.
+    </p>
+    <p>Copyright 2026 Ground Loop LLC</p>
+  </footer>
 </body>
 </html>
