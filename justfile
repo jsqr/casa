@@ -1,7 +1,7 @@
 # Bare `just` lists the recipes and does nothing else.
 #
 # A host is built when its platform matches this machine's and evaluated
-# otherwise: kalliope and melpomene are x86_64-linux, thalia is
+# otherwise: kalliope, melpomene and polyhymnia are x86_64-linux, thalia is
 # aarch64-darwin. Forcing the drvPath still catches every type error,
 # unknown option and bad interpolation (just not a compile failure).
 #
@@ -16,7 +16,7 @@ default:
     @just --list
 
 # Check every host before committing
-check: kalliope melpomene thalia
+check: kalliope melpomene polyhymnia thalia
 
 # Check kalliope's system closure
 kalliope:
@@ -25,6 +25,10 @@ kalliope:
 # Check melpomene's system closure
 melpomene:
     @just _host x86_64-linux nixosConfigurations.melpomene.config.system.build.toplevel
+
+# Check polyhymnia's system closure
+polyhymnia:
+    @just _host x86_64-linux nixosConfigurations.polyhymnia.config.system.build.toplevel
 
 # Check the thalia home-manager generation
 thalia:

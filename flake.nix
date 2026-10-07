@@ -82,6 +82,16 @@
       ];
     };
 
+    nixosConfigurations.polyhymnia = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      specialArgs = { inherit inputs; };
+      modules = [
+        home-manager.nixosModules.home-manager
+        inputs.disko.nixosModules.disko
+        ./hosts/polyhymnia/configuration.nix
+      ];
+    };
+
     homeConfigurations.thalia = home-manager.lib.homeManagerConfiguration {
       pkgs = nixpkgs.legacyPackages.aarch64-darwin;
       extraSpecialArgs = { inherit inputs; };
