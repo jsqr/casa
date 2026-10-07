@@ -65,6 +65,15 @@ in
   };
   systemd.services.nixos-upgrade.serviceConfig.ExecStartPre = "${casaPull}";
 
+  # nixos-upgrade runs as root with no SUDO_UID, so Nix's libgit2 refuses
+  # the jj-owned checkout unless safe.directory names it.
+  systemd.tmpfiles.rules = [
+    "L+ /root/.gitconfig - - - - ${pkgs.writeText "root-gitconfig" ''
+      [safe]
+          directory = /home/jj/jsqr/casa
+    ''}"
+  ];
+
   # Root fetches the private ashokan input with a GitHub deploy key at
   # /root/.ssh/id_ed25519.
   programs.ssh.knownHosts."github.com".publicKey =
