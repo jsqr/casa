@@ -15,8 +15,8 @@ const AMP = 5.5;
 const LIMIT = 13; // soft-clip ceiling; the box's inner edge is ~32 units from YC
 const STEP = 0.5;
 
-const MEAN_WAIT = 9000;
-const MIN_WAIT = 2500;
+const MEAN_WAIT = 4500;
+const MIN_WAIT = 1500;
 const BURST_MS = [800, 1600];
 const INTENSITY = 1;
 
