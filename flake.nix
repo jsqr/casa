@@ -51,9 +51,9 @@
       flake = false;
     };
     # groundloop.law site files, served as caddy's document root on
-    # polyhymnia. Private; fetched over ssh as jj, as with ashokan.
+    # polyhymnia.
     groundloop = {
-      url = "git+ssh://git@github.com/jsqr/groundloop.law.git?ref=main";
+      url = "github:jsqr/groundloop.law";
       flake = false;
     };
 

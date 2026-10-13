@@ -34,6 +34,10 @@ polyhymnia:
 thalia:
     @just _host aarch64-darwin homeConfigurations.thalia.activationPackage
 
+# Pick up the latest groundloop.law push now instead of at the nightly lock bump
+groundloop:
+    nix flake update groundloop
+
 # Build a flake output on its own platform, evaluate it on any other
 _host system output:
     #!/usr/bin/env bash

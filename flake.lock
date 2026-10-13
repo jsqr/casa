@@ -42,16 +42,15 @@
       "locked": {
         "lastModified": 1791907638,
         "narHash": "sha256-LZNvymCgXLA4w2WpKh9lMV552psut6cPvWoa9xnYyDc=",
-        "ref": "main",
+        "owner": "jsqr",
+        "repo": "groundloop.law",
         "rev": "464a355b036eb8a189dce8b4cdc263ec3c83ca9c",
-        "revCount": 1,
-        "type": "git",
-        "url": "ssh://git@github.com/jsqr/groundloop.law.git"
+        "type": "github"
       },
       "original": {
-        "ref": "main",
-        "type": "git",
-        "url": "ssh://git@github.com/jsqr/groundloop.law.git"
+        "owner": "jsqr",
+        "repo": "groundloop.law",
+        "type": "github"
       }
     },
     "home-manager": {
