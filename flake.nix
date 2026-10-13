@@ -50,6 +50,12 @@
       url = "git+ssh://git@github.com/jsqr/ashokan.git?ref=main";
       flake = false;
     };
+    # groundloop.law site files, served as caddy's document root on
+    # polyhymnia. Private; fetched over ssh as jj, as with ashokan.
+    groundloop = {
+      url = "git+ssh://git@github.com/jsqr/groundloop.law.git?ref=main";
+      flake = false;
+    };
 
     # Only for homeModules.default: home-manager release-26.05 has no
     # programs.noctalia (master does). The package itself comes from

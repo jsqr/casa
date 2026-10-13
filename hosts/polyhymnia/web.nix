@@ -1,4 +1,4 @@
-{ ... }:
+{ inputs, ... }:
 
 let
   domain = "groundloop.law";
@@ -8,7 +8,7 @@ in
     enable = true;
     email = "jj@jsqr.org";
     virtualHosts.${domain}.extraConfig = ''
-      root * ${./www}
+      root * ${inputs.groundloop}
       file_server
     '';
     virtualHosts."www.${domain}".extraConfig = ''
