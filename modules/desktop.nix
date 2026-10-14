@@ -69,6 +69,10 @@
   # NetworkManager rather than melpomene's networkd + static address.
   networking.networkmanager.enable = true;
 
+  # Without resolved, tailscale can read an empty upstream list on joining a
+  # network and SERVFAIL every lookup.
+  services.resolved.enable = true;
+
   # Restart NetworkManager after the switch has re-executed systemd, not
   # stop it before. Stopping it drops the Wi-Fi, and a systemd re-exec with
   # an NFS share mounted over a dead link hangs the fstab generator and
