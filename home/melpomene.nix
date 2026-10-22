@@ -24,9 +24,7 @@ in
 
   targets.genericLinux.enable = true;
 
-  services.ollama.enable = true;
-
-  home.packages = [ pkgs.code-server unfreePkgs.claude-code ];
+  home.packages = [ unfreePkgs.claude-code ];
 
   # NixOS-only (reads /run/current-system, systemctl), so wired here
   # rather than in common.nix alongside the other bin/ scripts.

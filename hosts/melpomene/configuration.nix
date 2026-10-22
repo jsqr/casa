@@ -261,10 +261,6 @@ in
     };
   };
 
-  # exim defaults to local-only delivery; add a `config = ''...''` block
-  # later if you actually need outbound mail.
-  services.exim.enable = true;
-
   services.avahi = {
     enable = true;
     nssmdns4 = true;

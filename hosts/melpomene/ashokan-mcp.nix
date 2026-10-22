@@ -1,23 +1,19 @@
 # For casa/hosts/melpomene/configuration.nix: the ashokan MCP server, the
 # servers/mcp member of the ashokan repo, as a system service. It reads
 # the local postgres as ashokan_reader over the socket, by peer identity,
-# and answers on 127.0.0.1:8011. The Funnel on 443 publishes it beside
-# whatever serves `/` there (flex-testing on 8004 today): two path
-# handlers, one for the MCP endpoint and one for the OAuth discovery
-# document clients fetch at the origin, set by a oneshot below. Callers
-# sign in through Descope and the tools answer the ones on the allowlist
-# (see the repo's README, "The MCP server").
+# and answers on 127.0.0.1:8011. The Funnel on 443 publishes it through
+# two path handlers, one for the MCP endpoint and one for the OAuth
+# discovery document clients fetch at the origin, set by a oneshot below.
+# Callers sign in through Descope and the tools answer the ones on the
+# allowlist (see the repo's README, "The MCP server").
 #
 # Everything here is declared except what is private, which this public
 # repo cannot hold. Two files in jj's home reach the service as systemd
 # credentials: ~/.secrets, from which the start script takes only the
-# key that embeds queries (ASHOKAN_OPENROUTER_API_KEY), and
+# key that embeds queries (FIREWORKS_API_KEY), and
 # ~/.config/ashokan/mcp-allowlist, the callers the tools answer, one
 # email or Descope subject id per line, `#` for a comment. To let someone
 # in, add them there and restart the service.
-#
-# The postgres funnel on 10000 can be turned off (tailscale funnel
-# --tcp=10000 off) once nothing off the machine reads the database.
 { config, lib, pkgs, inputs, ... }:
 let
   publicUrl = "https://melpomene.xantu-ghost.ts.net";
@@ -105,8 +101,7 @@ in
   };
 
   # The two funnel handlers. `tailscale funnel --bg` records them in
-  # tailscaled's state, so running this again is a no-op; the `/` handler
-  # already there is left alone. The funnel strips a handler's mount path
+  # tailscaled's state, so running this again is a no-op. The funnel strips a handler's mount path
   # from the request and the path on the backend url puts it back, so the
   # server sees the paths it serves.
   systemd.services.ashokan-mcp-funnel = {

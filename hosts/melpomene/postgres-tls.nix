@@ -36,11 +36,22 @@
 
   # Renew the certificate. Let's Encrypt issues for ninety days and
   # `tailscale cert` renews when it is due, so a weekly run is enough.
+  # Postgres also pulls it in before each start: with ssl = true it will
+  # not start without the files, which a fresh /data does not have. Wants
+  # rather than Requires, so a tailnet that is down at boot leaves postgres
+  # on the certificate it already has.
+  systemd.services.postgresql = {
+    wants = [ "postgres-tailscale-cert.service" ];
+    after = [ "postgres-tailscale-cert.service" ];
+  };
   systemd.services.postgres-tailscale-cert = {
     description = "Tailscale certificate for postgres TLS";
     after = [ "tailscaled.service" ];
     wants = [ "tailscaled.service" ];
-    serviceConfig.Type = "oneshot";
+    serviceConfig = {
+      Type = "oneshot";
+      TimeoutStartSec = 60;
+    };
     path = [ pkgs.tailscale pkgs.coreutils pkgs.systemd ];
     script = ''
       set -euo pipefail
@@ -49,7 +60,10 @@
         melpomene.xantu-ghost.ts.net
       chown -R postgres:postgres /data/tls
       chmod 600 /data/tls/melpomene.key
-      systemctl reload postgresql.service
+      # Before a postgres start there is nothing to reload.
+      if systemctl is-active --quiet postgresql.service; then
+        systemctl reload postgresql.service
+      fi
     '';
   };
   systemd.timers.postgres-tailscale-cert = {
