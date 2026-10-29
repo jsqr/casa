@@ -60,5 +60,6 @@ with pkgs; [
   zig
 ] ++ [
   unstable.pi-coding-agent
+  unstable.mistral-vibe
   unstable.pyrefly
 ]
