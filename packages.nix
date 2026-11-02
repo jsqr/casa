@@ -30,6 +30,7 @@ with pkgs; [
   pandoc
   poppler-utils
   procs
+  rclone
   ripgrep
   ruff
   rustlings
@@ -60,6 +61,9 @@ with pkgs; [
   zig
 ] ++ [
   unstable.pi-coding-agent
-  unstable.mistral-vibe
   unstable.pyrefly
+]
+# Its test suite times out on darwin (thalia).
+++ lib.optionals (!stdenv.hostPlatform.isDarwin) [
+  unstable.mistral-vibe
 ]

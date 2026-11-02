@@ -371,7 +371,6 @@ in
   # whole config directory, named by ATUIN_CONFIG_DIR.
   programs.atuin = {
     enable = true;
-    package = unstable.atuin;
     enableZshIntegration = true;
     settings = atuinSettings "dark";
     themes.${atuinThemeName.dark} = atuinTheme "dark";
