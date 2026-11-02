@@ -438,6 +438,9 @@ in
       # Newer than nixos-26.05's 20260424.430, which mangles FIM indentation.
       # Drop once nixos-26.11 catches up.
       (unstable.emacsPackagesFor config.programs.emacs.package).minuet
+      # nixos-26.05's snapshot predates the zig 0.16 port. Drop once 26.11
+      # catches up.
+      (unstable.emacsPackagesFor config.programs.emacs.package).ghostel
     ];
   };
   services.emacs.enable = true;

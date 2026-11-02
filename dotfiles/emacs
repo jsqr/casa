@@ -339,10 +339,12 @@
   ;; system-wide
   (eat-term-name "xterm-256color"))
 
-;; ghostel - new terminal based on ghostty lib; build messed up by zig 16.0
-;; changes, so I'm just going to wait on this one rather than dive in
-;; (use-package ghostel
-;;   :ensure t)
+;; ghostel (libghostty terminal), on trial alongside eat
+(use-package ghostel
+  :bind (("C-c T" . ghostel))
+  :custom
+  ;; Nix ships the native module; never download or compile one.
+  (ghostel-module-auto-install nil))
 
 ;; Ruff: Python formatting and linting
 (use-package ruff-format
