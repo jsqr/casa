@@ -74,6 +74,35 @@
         "type": "github"
       }
     },
+    "negpy": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs-unstable"
+        ],
+        "pyproject-build-systems": [
+          "pyproject-build-systems"
+        ],
+        "pyproject-nix": [
+          "pyproject-nix"
+        ],
+        "uv2nix": [
+          "uv2nix"
+        ]
+      },
+      "locked": {
+        "lastModified": 1794567478,
+        "narHash": "sha256-UmVRGfi0/6eycES+42J/T7Nivm6AVGtyFQYh58i8G3I=",
+        "owner": "marcinz606",
+        "repo": "NegPy",
+        "rev": "dbc66ba2f51b46fd4eae2ba04b26e087724c532f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "marcinz606",
+        "repo": "NegPy",
+        "type": "github"
+      }
+    },
     "nix-index-database": {
       "inputs": {
         "nixpkgs": [
@@ -230,6 +259,7 @@
         "disko": "disko",
         "groundloop": "groundloop",
         "home-manager": "home-manager",
+        "negpy": "negpy",
         "nix-index-database": "nix-index-database",
         "nixos-hardware": "nixos-hardware",
         "nixpkgs": "nixpkgs_2",

@@ -116,6 +116,7 @@ in
     unstable.julia-mono
     unstable.darktable
     unstable.gimp
+    inputs.negpy.packages.${pkgs.stdenv.hostPlatform.system}.default
     pkgs.grim
     pkgs.slurp
     pkgs.wl-clipboard

@@ -64,6 +64,15 @@
       url = "github:noctalia-dev/noctalia";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
+
+    # Not in nixpkgs; Linux only.
+    negpy = {
+      url = "github:marcinz606/NegPy";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+      inputs.pyproject-nix.follows = "pyproject-nix";
+      inputs.uv2nix.follows = "uv2nix";
+      inputs.pyproject-build-systems.follows = "pyproject-build-systems";
+    };
   };
 
   outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, ... }@inputs: {
