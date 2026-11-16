@@ -63,7 +63,4 @@ with pkgs; [
   unstable.pi-coding-agent
   unstable.pyrefly
 ]
-# Its test suite times out on darwin (thalia).
-++ lib.optionals (!stdenv.hostPlatform.isDarwin) [
-  unstable.mistral-vibe
-]
+# unstable.mistral-vibe dropped: vibe-rs 3.1.0 fails (aws-lc-sys finds no system AWS-LC).
