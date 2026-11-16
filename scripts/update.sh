@@ -1,16 +1,19 @@
 #!/usr/bin/env bash
-# ~/bin/update — interactive update helper for thalia and kalliope.
+# ~/bin/update -- interactive update helper for thalia and kalliope.
 #
-# melpomene is excluded: it upgrades itself nightly via system.autoUpgrade
-# (hosts/melpomene/configuration.nix), and refreshes rustup and uv from a
-# systemd user timer (the toolchain-update unit in home/melpomene.nix).
+# melpomene is the only host that changes flake.lock: it bumps, commits and
+# pushes it nightly via system.autoUpgrade (hosts/melpomene/configuration.nix).
+# This script pulls that lock and switches to it; it never runs
+# `nix flake update`, which also needs a key for the private ashokan input.
+#
+# melpomene and polyhymnia are excluded: both upgrade themselves nightly.
 set -u
 
 HOST="$(hostname -s)"
 FLAKE="$HOME/jsqr/casa"
 
-if [[ "$HOST" == melpomene ]]; then
-  echo "update.sh does not run on melpomene — it upgrades via system.autoUpgrade." >&2
+if [[ "$HOST" == melpomene || "$HOST" == polyhymnia ]]; then
+  echo "update.sh does not run on $HOST -- it upgrades via system.autoUpgrade." >&2
   exit 0
 fi
 
@@ -50,12 +53,11 @@ read -p "Run updates? (y/n) " -n 1 -r; echo
 [[ $REPLY =~ ^[Yy]$ ]] || exit 0
 
 # Run the steps as a single &&-chain so a failure aborts the rest and the
-# success line only prints if every step succeeded. nix flake update leaves
-# flake.lock modified for manual review and commit.
+# success line only prints if every step succeeded.
 if [[ "$PLATFORM" == darwin ]]; then
   build_step() {
     brew upgrade \
-      && ( cd "$FLAKE" && git merge --ff-only '@{u}' && nix flake update ) \
+      && git -C "$FLAKE" merge --ff-only '@{u}' \
       && home-manager switch --flake "$FLAKE#$HOST"
   }
 else
@@ -64,16 +66,16 @@ else
   # The switch can restart wpa_supplicant; Wi-Fi takes ~10s to come back,
   # longer than uv's retries last.
   build_step() {
-    ( cd "$FLAKE" && git merge --ff-only '@{u}' && nix flake update ) \
+    git -C "$FLAKE" merge --ff-only '@{u}' \
       && ( cd "$FLAKE" && just switch ) \
       && nm-online -q -t 30
   }
 fi
 
 if build_step && rustup update && uv tool upgrade --all; then
-  echo "✓ $HOST updated (flake.lock left modified — commit when ready)"
+  echo "✓ $HOST updated"
 else
-  echo "✗ update failed (see above); flake.lock may be modified" >&2
+  echo "✗ update failed (see above)" >&2
   [[ "$PLATFORM" == nixos ]] \
     && echo "  if the mount guard refused: run 'just stage', then reboot" >&2
   exit 1
