@@ -56,11 +56,6 @@
       url = "github:jsqr/groundloop.law";
       flake = false;
     };
-    # munchingsquares.com site files, served by caddy on polyhymnia.
-    munchingsquares = {
-      url = "git+https://codeberg.org/jsqr/munchingsquares.com";
-      flake = false;
-    };
 
     # Only for homeModules.default: home-manager release-26.05 has no
     # programs.noctalia (master does). The package itself comes from

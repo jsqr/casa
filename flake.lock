@@ -74,22 +74,6 @@
         "type": "github"
       }
     },
-    "munchingsquares": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1763262156,
-        "narHash": "sha256-uGrAElP+3vzKtT8hrEV8qKSqmfc0Ma8jCnbtRxk0ZYI=",
-        "ref": "refs/heads/main",
-        "rev": "91cca0a8e5403274cc8abc719666e09a1070aff7",
-        "revCount": 3,
-        "type": "git",
-        "url": "https://codeberg.org/jsqr/munchingsquares.com"
-      },
-      "original": {
-        "type": "git",
-        "url": "https://codeberg.org/jsqr/munchingsquares.com"
-      }
-    },
     "negpy": {
       "inputs": {
         "nixpkgs": [
@@ -275,7 +259,6 @@
         "disko": "disko",
         "groundloop": "groundloop",
         "home-manager": "home-manager",
-        "munchingsquares": "munchingsquares",
         "negpy": "negpy",
         "nix-index-database": "nix-index-database",
         "nixos-hardware": "nixos-hardware",

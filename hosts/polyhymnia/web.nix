@@ -1,26 +1,19 @@
-{ inputs, lib, ... }:
+{ inputs, ... }:
 
 let
-  sites = {
-    "groundloop.law" = inputs.groundloop;
-    "munchingsquares.com" = inputs.munchingsquares;
-  };
-
-  vhosts = domain: root: {
-    ${domain}.extraConfig = ''
-      root * ${root}
-      file_server
-    '';
-    "www.${domain}".extraConfig = ''
-      redir https://${domain}{uri} permanent
-    '';
-  };
+  domain = "groundloop.law";
 in
 {
   services.caddy = {
     enable = true;
     email = "jj@jsqr.org";
-    virtualHosts = lib.mkMerge (lib.mapAttrsToList vhosts sites);
+    virtualHosts.${domain}.extraConfig = ''
+      root * ${inputs.groundloop}
+      file_server
+    '';
+    virtualHosts."www.${domain}".extraConfig = ''
+      redir https://${domain}{uri} permanent
+    '';
   };
 
   # UDP 443 is HTTP/3.
